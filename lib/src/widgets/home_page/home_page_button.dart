@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 
 class HomePageButton extends StatelessWidget {
   const HomePageButton({
-    Key? key,
+    super.key,
     this.label,
     required this.text,
     this.onPressed,
-  }) : super(key: key);
+  });
 
   final String? label;
   final String text;
@@ -28,15 +28,15 @@ class HomePageButton extends StatelessWidget {
                   label?.toUpperCase() ?? '',
                   style: Theme.of(context)
                       .textTheme
-                      .subtitle2
+                      .titleSmall
                       ?.copyWith(color: Colors.white),
                 ),
               ),
             ),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
-                primary: Theme.of(context).canvasColor,
-                onPrimary: Theme.of(context).brightness == Brightness.dark
+                backgroundColor: Theme.of(context).canvasColor,
+                foregroundColor: Theme.of(context).brightness == Brightness.dark
                     ? Colors.white70
                     : Theme.of(context).colorScheme.primary,
               ),

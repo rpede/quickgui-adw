@@ -3,10 +3,10 @@ import 'package:gettext_i18n/gettext_i18n.dart';
 
 class CancelDismissButton extends StatelessWidget {
   const CancelDismissButton({
-    Key? key,
+    super.key,
     required this.downloadFinished,
     required this.onCancel,
-  }) : super(key: key);
+  });
 
   final bool downloadFinished;
   final VoidCallback onCancel;
@@ -20,8 +20,8 @@ class CancelDismissButton extends StatelessWidget {
         children: [
           ElevatedButton(
             style: ElevatedButton.styleFrom(
-              primary: Theme.of(context).colorScheme.surface,
-              onPrimary: Theme.of(context).brightness == Brightness.dark
+              backgroundColor: Theme.of(context).colorScheme.surface,
+              foregroundColor: Theme.of(context).brightness == Brightness.dark
                   ? Colors.white70
                   : Theme.of(context).colorScheme.primary,
             ),
