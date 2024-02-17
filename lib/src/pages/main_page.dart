@@ -7,7 +7,7 @@ import '../widgets/home_page/main_menu.dart';
 import '../widgets/left_menu.dart';
 
 class MainPage extends StatefulWidget {
-  const MainPage({Key? key}) : super(key: key);
+  const MainPage({super.key});
 
   @override
   State<MainPage> createState() => _MainPageState();
@@ -28,8 +28,8 @@ class _MainPageState extends State<MainPage> {
         title: Text(context.t('Main menu')),
       ),
       drawer: const LeftMenu(),
-      body: Column(
-        children: const [
+      body: const Column(
+        children: [
           Logo(),
           MainMenu(),
         ],

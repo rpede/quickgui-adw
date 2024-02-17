@@ -15,11 +15,11 @@ import '../widgets/downloader/download_progress_bar.dart';
 
 class Downloader extends StatefulWidget {
   const Downloader({
-    Key? key,
+    super.key,
     required this.operatingSystem,
     required this.version,
     this.option,
-  }) : super(key: key);
+  });
 
   final OperatingSystem operatingSystem;
   final Version version;
@@ -97,15 +97,15 @@ class _DownloaderState extends State<Downloader> {
       }
 
       process.exitCode.then((value) {
-        bool _cancelled = value.isNegative;
+        bool cancelled = value.isNegative;
         controller.close();
         setState(() {
           _downloadFinished = true;
           notificationsClient.notify(
-            _cancelled
+            cancelled
                 ? context.t('Download cancelled')
                 : context.t('Download complete'),
-            body: _cancelled
+            body: cancelled
                 ? context.t(
                     'Download of {0} has been canceled.',
                     args: [widget.operatingSystem.name],
@@ -133,10 +133,9 @@ class _DownloaderState extends State<Downloader> {
       appBar: AppBar(
         title: Text(
           context.t('Downloading {0}', args: [
-            '${widget.operatingSystem.name} ${widget.version.version}' +
-                (widget.option!.option.isNotEmpty
+            '${widget.operatingSystem.name} ${widget.version.version}${widget.option!.option.isNotEmpty
                     ? ' (${widget.option!.option})'
-                    : '')
+                    : ''}'
           ]),
         ),
         automaticallyImplyLeading: false,

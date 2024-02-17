@@ -9,7 +9,7 @@ import '../mixins/preferences_mixin.dart';
 import '../model/app_settings.dart';
 
 class LeftMenu extends StatefulWidget {
-  const LeftMenu({Key? key}) : super(key: key);
+  const LeftMenu({super.key});
 
   @override
   State<LeftMenu> createState() => _LeftMenuState();
@@ -38,15 +38,15 @@ class _LeftMenuState extends State<LeftMenu> with PreferencesMixin {
 
   @override
   Widget build(BuildContext context) {
-    var _version = AppVersion.packageInfo!.version;
+    var version = AppVersion.packageInfo!.version;
     return Consumer<AppSettings>(
       builder: (context, appSettings, _) {
         return Drawer(
           child: ListView(
             children: [
               ListTile(
-                title: Text("quickgui $_version",
-                    style: Theme.of(context).textTheme.headline6),
+                title: Text("quickgui $version",
+                    style: Theme.of(context).textTheme.titleLarge),
               ),
               const Divider(),
               Padding(
@@ -80,7 +80,7 @@ class _LeftMenuState extends State<LeftMenu> with PreferencesMixin {
                       value: currentLocale,
                       items: supportedLocales
                           .map(
-                              (e) => DropdownMenuItem(child: Text(e), value: e))
+                              (e) => DropdownMenuItem(value: e, child: Text(e)))
                           .toList(),
                       onChanged: (value) {
                         setState(() {

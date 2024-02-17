@@ -3,11 +3,10 @@ import 'package:gettext_i18n/gettext_i18n.dart';
 
 class DownloadLabel extends StatelessWidget {
   const DownloadLabel(
-      {Key? key,
+      {super.key,
       required this.downloadFinished,
       required this.data,
-      required this.downloader})
-      : super(key: key);
+      required this.downloader});
 
   final bool downloadFinished;
   final double? data;

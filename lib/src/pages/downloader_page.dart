@@ -5,7 +5,7 @@ import '../widgets/home_page/downloader_menu.dart';
 import '../widgets/home_page/logo.dart';
 
 class DownloaderPage extends StatelessWidget {
-  const DownloaderPage({Key? key}) : super(key: key);
+  const DownloaderPage({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -13,8 +13,8 @@ class DownloaderPage extends StatelessWidget {
       appBar: AppBar(
         title: Text(context.t('Downloader')),
       ),
-      body: Column(
-        children: const [
+      body: const Column(
+        children: [
           Logo(),
           DownloaderMenu(),
         ],

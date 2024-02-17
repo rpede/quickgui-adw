@@ -18,7 +18,7 @@ import '../model/vminfo.dart';
 /// Displays a list of available VMs, running state and connection info,
 /// with buttons to start and stop VMs.
 class Manager extends StatefulWidget {
-  const Manager({Key? key}) : super(key: key);
+  const Manager({super.key});
 
   @override
   State<Manager> createState() => _ManagerState();
@@ -138,10 +138,10 @@ class _ManagerState extends State<Manager> with PreferencesMixin {
       if ((entity.path.endsWith('.conf')) && (_isValidConf(entity.path))) {
         String name = path.basenameWithoutExtension(entity.path);
         currentVms.add(name);
-        File pidFile = File(name + '/' + name + '.pid');
+        File pidFile = File('$name/$name.pid');
         if (pidFile.existsSync()) {
           String pid = pidFile.readAsStringSync().trim();
-          Directory procDir = Directory('/proc/' + pid);
+          Directory procDir = Directory('/proc/$pid');
           if (procDir.existsSync()) {
             if (_activeVms.containsKey(name)) {
               activeVms[name] = _activeVms[name]!;
@@ -172,11 +172,11 @@ class _ManagerState extends State<Manager> with PreferencesMixin {
   }
 
   Widget _buildVmList() {
-    List<Widget> _widgetList = [];
+    List<Widget> widgetList = [];
     final Color buttonColor = Theme.of(context).brightness == Brightness.dark
         ? Colors.white70
         : Theme.of(context).colorScheme.primary;
-    _widgetList.addAll(
+    widgetList.addAll(
       [
         Padding(
           padding: const EdgeInsets.symmetric(vertical: 16.0),
@@ -222,12 +222,12 @@ class _ManagerState extends State<Manager> with PreferencesMixin {
       return _buildRow(vm, buttonColor);
     }).toList();
     for (var row in rows) {
-      _widgetList.addAll(row);
+      widgetList.addAll(row);
     }
 
     return ListView(
       padding: const EdgeInsets.all(16.0),
-      children: _widgetList,
+      children: widgetList,
     );
   }
 
@@ -239,10 +239,10 @@ class _ManagerState extends State<Manager> with PreferencesMixin {
     if (active) {
       vmInfo = _activeVms[currentVm]!;
       if (vmInfo.spicePort != null) {
-        connectInfo += context.t('SPICE port') + ': ' + vmInfo.spicePort! + ' ';
+        connectInfo += '${context.t('SPICE port')}: ${vmInfo.spicePort!} ';
       }
       if (vmInfo.sshPort != null && _terminalEmulator != null) {
-        connectInfo += context.t('SSH port') + ': ' + vmInfo.sshPort! + ' ';
+        connectInfo += '${context.t('SSH port')}: ${vmInfo.sshPort!} ';
         _detectSsh(int.parse(vmInfo.sshPort!)).then((sshRunning) {
           if (sshRunning && !sshy) {
             setState(() {
@@ -272,7 +272,7 @@ class _ManagerState extends State<Manager> with PreferencesMixin {
                       ? null
                       : () async {
                           Map<String, VmInfo> activeVms = _activeVms;
-                          List<String> args = ['--vm', currentVm + '.conf'];
+                          List<String> args = ['--vm', '$currentVm.conf'];
                           if (_spicy) {
                             args.addAll(['--display', 'spice']);
                           }
@@ -331,12 +331,8 @@ class _ManagerState extends State<Manager> with PreferencesMixin {
                         showDialog<String?>(
                           context: context,
                           builder: (BuildContext context) => AlertDialog(
-                            title: Text('Delete ' + currentVm),
-                            content: Text('You are about to delete ' +
-                                currentVm +
-                                '. This cannot be undone. ' +
-                                'Would you like to delete the disk image but keep the ' +
-                                'configuration, or delete the whole VM?'),
+                            title: Text('Delete $currentVm'),
+                            content: Text('You are about to delete $currentVm. This cannot be undone. Would you like to delete the disk image but keep the configuration, or delete the whole VM?'),
                             actions: [
                               TextButton(
                                 child: const Text('Cancel'),
@@ -358,8 +354,8 @@ class _ManagerState extends State<Manager> with PreferencesMixin {
                           if (result != 'cancel') {
                             List<String> args = [
                               '--vm',
-                              currentVm + '.conf',
-                              '--delete-' + result
+                              '$currentVm.conf',
+                              '--delete-$result'
                             ];
                             await Process.start('quickemu', args);
                           }
@@ -397,14 +393,14 @@ class _ManagerState extends State<Manager> with PreferencesMixin {
                 onPressed: !sshy
                     ? null
                     : () {
-                        TextEditingController _usernameController =
+                        TextEditingController usernameController =
                             TextEditingController();
                         showDialog<bool>(
                           context: context,
                           builder: (BuildContext context) => AlertDialog(
                             title: Text('Launch SSH connection to $currentVm'),
                             content: TextField(
-                              controller: _usernameController,
+                              controller: usernameController,
                               decoration: const InputDecoration(
                                   hintText: "SSH username"),
                             ),
@@ -426,7 +422,7 @@ class _ManagerState extends State<Manager> with PreferencesMixin {
                               'ssh',
                               '-p',
                               vmInfo.sshPort!,
-                              _usernameController.text + '@localhost'
+                              '${usernameController.text}@localhost'
                             ];
                             // Set the arguments to execute the ssh command in the default terminal.
                             // Strip the extension as x-terminal-emulator may point to a .wrapper
