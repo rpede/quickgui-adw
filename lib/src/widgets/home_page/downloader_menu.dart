@@ -10,7 +10,7 @@ import '../../mixins/preferences_mixin.dart';
 import '../home_page/home_page_button_group.dart';
 
 class DownloaderMenu extends StatefulWidget {
-  const DownloaderMenu({Key? key}) : super(key: key);
+  const DownloaderMenu({super.key});
 
   @override
   State<DownloaderMenu> createState() => _DownloaderMenuState();
@@ -21,6 +21,7 @@ class _DownloaderMenuState extends State<DownloaderMenu> with PreferencesMixin {
   void initState() {
     super.initState();
     getPreference<String>(prefWorkingDirectory).then((pref) {
+      if (pref == null) return;
       setState(() {
         Directory.current = pref;
       });
@@ -72,12 +73,12 @@ class _DownloaderMenuState extends State<DownloaderMenu> with PreferencesMixin {
             const Divider(
               thickness: 2,
             ),
-            Row(
+            const Row(
               children: [
                 Expanded(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.start,
-                    children: const [
+                    children: [
                       Padding(
                         padding: EdgeInsets.symmetric(horizontal: 12),
                         child: HomePageButtonGroup(),
