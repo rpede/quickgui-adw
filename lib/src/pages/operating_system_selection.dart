@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/svg.dart';
 import 'package:gettext_i18n/gettext_i18n.dart';
 
 import '../model/operating_system.dart';
+import '../widgets/downloader/operating_system_icon.dart';
 
 class OperatingSystemSelection extends StatefulWidget {
-  const OperatingSystemSelection({Key? key}) : super(key: key);
+  const OperatingSystemSelection({super.key});
 
   @override
   State<OperatingSystemSelection> createState() =>
@@ -74,15 +74,10 @@ class _OperatingSystemSelectionState extends State<OperatingSystemSelection> {
               itemCount: list.length,
               itemBuilder: (context, index) {
                 var item = list[index];
-                var icon = SvgPicture.asset(
-                  "assets/quickemu-icons/${item.code}.svg",
-                  width: 32,
-                  height: 32,
-                );
                 return Card(
                   child: ListTile(
                     title: Text(item.name),
-                    leading: icon,
+                    leading: OperatingSystemIcon(item: item),
                     onTap: () {
                       Navigator.of(context).pop(item);
                     },
