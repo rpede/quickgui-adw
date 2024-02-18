@@ -7,7 +7,7 @@ import 'package:gettext_i18n/gettext_i18n.dart';
 
 import '../../globals.dart';
 import '../../mixins/preferences_mixin.dart';
-import '../home_page/home_page_button_group.dart';
+import 'home_page_button_group.dart';
 
 class DownloaderMenu extends StatefulWidget {
   const DownloaderMenu({super.key});
