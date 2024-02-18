@@ -5,15 +5,14 @@ import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:gettext_i18n/gettext_i18n.dart';
+import 'package:quickgui/widgets/manager/vm_list_item.dart';
 
 import '../controllers/manager_controller.dart';
 import '../globals.dart';
 import '../mixins/preferences_mixin.dart';
 import '../model/manager.dart';
 import '../model/vminfo.dart';
-import '../widgets/manager/dialogs.dart';
 
 /// VM manager page.
 /// Displays a list of available VMs, running state and connection info,
@@ -83,49 +82,6 @@ class _ManagerState extends State<Manager> with PreferencesMixin {
     }
   }
 
-  void _onRunPressed(String currentVm) async {
-    final info = await controller.runVm(currentVm);
-    setState(() {
-      _activeVms[currentVm] = info;
-    });
-  }
-
-  Future<void> _onStopPressed(BuildContext context, String currentVm) async {
-    final result = await showDialog<bool>(
-      context: context,
-      builder: (context) => StopVmDialog(vmName: currentVm),
-    );
-    if (result ?? false) {
-      controller.killVm(currentVm);
-      setState(() {
-        _activeVms.remove(currentVm);
-      });
-    }
-  }
-
-  Future<void> _onDeletePressed(BuildContext context, String currentVm) async {
-    final result = await showDialog<String?>(
-      context: context,
-      builder: (context) => DeleteVmDialog(vmName: currentVm),
-    );
-    if ((result ?? 'cancel') != 'cancel') {
-      controller.deleteVm(currentVm, DeleteVmOption.values.byName(result!));
-    }
-  }
-
-  Future<void> _onSshConnectPressed(
-      BuildContext context, String currentVm, VmInfo vmInfo) async {
-    TextEditingController usernameController = TextEditingController();
-    final result = await showDialog<bool>(
-      context: context,
-      builder: (BuildContext context) => SshConnectDialog(
-          vmName: currentVm, usernameController: usernameController),
-    );
-    if (result ?? false) {
-      controller.connectSsh(vmInfo, usernameController.text);
-    }
-  }
-
   Widget _buildVmList(BuildContext context) {
     final Color buttonColor = Theme.of(context).brightness == Brightness.dark
         ? Colors.white70
@@ -158,13 +114,15 @@ class _ManagerState extends State<Manager> with PreferencesMixin {
         const Divider(
           thickness: 2,
         ),
-        ..._currentVms.expand((vm) => _buildRow(context, vm, buttonColor))
+        ..._currentVms.expand((vm) => [
+              _buildRow(context, vm, buttonColor),
+              const Divider(),
+            ])
       ],
     );
   }
 
-  List<Widget> _buildRow(
-      BuildContext context, String currentVm, Color buttonColor) {
+  Widget _buildRow(BuildContext context, String currentVm, Color buttonColor) {
     final bool active = _activeVms.containsKey(currentVm);
     final bool sshy = _sshVms.contains(currentVm);
     VmInfo vmInfo = active ? _activeVms[currentVm]! : VmInfo();
@@ -186,70 +144,15 @@ class _ManagerState extends State<Manager> with PreferencesMixin {
         }
       });
     }
-    return <Widget>[
-      ListTile(
-          title: Text(currentVm),
-          trailing: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: <Widget>[
-              IconButton(
-                icon: Icon(
-                  active ? Icons.play_arrow : Icons.play_arrow_outlined,
-                  color: active ? Colors.green : buttonColor,
-                  semanticLabel: active ? 'Running' : 'Run',
-                ),
-                onPressed: active ? null : () => _onRunPressed(currentVm),
-              ),
-              IconButton(
-                icon: Icon(
-                  active ? Icons.stop : Icons.stop_outlined,
-                  color: active ? Colors.red : null,
-                  semanticLabel: active ? 'Stop' : 'Not running',
-                ),
-                onPressed:
-                    !active ? null : () => _onStopPressed(context, currentVm),
-              ),
-              IconButton(
-                icon: Icon(
-                  Icons.delete,
-                  color: active ? null : buttonColor,
-                  semanticLabel: 'Delete',
-                ),
-                onPressed:
-                    active ? null : () => _onDeletePressed(context, currentVm),
-              ),
-            ],
-          )),
-      if (connectInfo.isNotEmpty)
-        ListTile(
-          title: Text(connectInfo, style: const TextStyle(fontSize: 12)),
-          trailing: Row(mainAxisSize: MainAxisSize.min, children: <Widget>[
-            IconButton(
-              icon: Icon(
-                Icons.monitor,
-                color: _spicy ? buttonColor : null,
-                semanticLabel: 'Connect display with SPICE',
-              ),
-              tooltip: _spicy
-                  ? 'Connect display with SPICE'
-                  : 'SPICE client not found',
-              onPressed: !_spicy ? null : () => controller.connectSpice(vmInfo),
-            ),
-            IconButton(
-              icon: SvgPicture.asset('assets/images/console.svg',
-                  semanticsLabel: 'Connect with SSH',
-                  color: sshy ? buttonColor : Colors.grey),
-              tooltip: sshy
-                  ? 'Connect with SSH'
-                  : 'SSH server not detected on guest',
-              onPressed: !sshy
-                  ? null
-                  : () => _onSshConnectPressed(context, currentVm, vmInfo),
-            ),
-          ]),
-        ),
-      const Divider()
-    ];
+    return VmListTile(
+      name: currentVm,
+      connectInfo: connectInfo,
+      active: active,
+      sshy: sshy,
+      spicy: _spicy,
+      vmInfo: vmInfo,
+      controller: controller,
+    );
   }
 
   @override
