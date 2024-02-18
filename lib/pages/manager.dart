@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:core';
 import 'dart:io';
 
@@ -8,11 +7,13 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:gettext_i18n/gettext_i18n.dart';
-import 'package:path/path.dart' as path;
 
+import '../controllers/manager_controller.dart';
 import '../globals.dart';
 import '../mixins/preferences_mixin.dart';
+import '../model/manager.dart';
 import '../model/vminfo.dart';
+import '../widgets/manager/dialogs.dart';
 
 /// VM manager page.
 /// Displays a list of available VMs, running state and connection info,
@@ -25,36 +26,20 @@ class Manager extends StatefulWidget {
 }
 
 class _ManagerState extends State<Manager> with PreferencesMixin {
+  final controller = ManagerController();
   List<String> _currentVms = [];
   Map<String, VmInfo> _activeVms = {};
   bool _spicy = false;
   final List<String> _sshVms = [];
-  String? _terminalEmulator;
-  final List<String> _supportedTerminalEmulators = [
-    'cool-retro-term',
-    'gnome-terminal',
-    'guake',
-    'mate-terminal',
-    'konsole',
-    'lxterm',
-    'lxterminal',
-    'pterm',
-    'sakura',
-    'terminator',
-    'tilix',
-    'uxterm',
-    'uxrvt',
-    'xfce4-terminal',
-    'xrvt',
-    'xterm'
-  ];
   Timer? refreshTimer;
 
   @override
   void initState() {
     super.initState();
-    _getTerminalEmulator();
-    _detectSpice();
+    controller
+        .detectSpice()
+        .then((available) => setState(() => _spicy = available));
+
     getPreference<String>(prefWorkingDirectory).then((pref) {
       setState(() {
         if (pref == null) {
@@ -63,10 +48,11 @@ class _ManagerState extends State<Manager> with PreferencesMixin {
         Directory.current = pref;
       });
       Future.delayed(Duration.zero,
-          () => _getVms(context)); // Reload VM list when we enter the page.
+          () => _updateVms()); // Reload VM list when we enter the page.
     });
+
     refreshTimer = Timer.periodic(const Duration(seconds: 5), (Timer t) {
-      _getVms(context);
+      _updateVms();
     }); // Reload VM list every 5 seconds.
   }
 
@@ -76,108 +62,77 @@ class _ManagerState extends State<Manager> with PreferencesMixin {
     super.dispose();
   }
 
-  void _getTerminalEmulator() async {
-    // Find out which terminal emulator we have set as the default.
-    ProcessResult result = await Process.run('which', ['x-terminal-emulator']);
-    if (result.exitCode == 0) {
-      String terminalEmulator =
-          await File(result.stdout.toString().trim()).resolveSymbolicLinks();
-      terminalEmulator = path.basenameWithoutExtension(terminalEmulator);
-      if (_supportedTerminalEmulators.contains(terminalEmulator)) {
-        setState(() {
-          _terminalEmulator = path.basename(terminalEmulator);
-        });
-      }
-    }
-  }
+  void _updateVms() async {
+    final VmStatus result = await controller.getVms(_activeVms);
 
-  void _detectSpice() async {
-    ProcessResult result = await Process.run('which', ['spicy']);
     setState(() {
-      _spicy = result.exitCode == 0;
+      _currentVms = result.currentVms;
+      _activeVms = result.activeVms;
     });
   }
 
-  VmInfo _parseVmInfo(name) {
-    VmInfo info = VmInfo();
-    File portsFile = File(name + '/' + name + '.ports');
-    if (portsFile.existsSync()) {
-      List<String> lines = portsFile.readAsLinesSync();
-      for (var line in lines) {
-        List<String> parts = line.split(',');
-        switch (parts[0]) {
-          case 'ssh':
-            info.sshPort = parts[1];
-            break;
-          case 'spice':
-            info.spicePort = parts[1];
-            break;
-        }
-      }
+  Future<void> _onTapCurrentPath() async {
+    String? result = await FilePicker.platform.getDirectoryPath();
+    if (result != null) {
+      setState(() {
+        Directory.current = result;
+      });
+
+      savePreference(prefWorkingDirectory, Directory.current.path);
+      _updateVms();
     }
-    return info;
   }
 
-  bool _isValidConf(conf) {
-    List<String> lines = File(conf).readAsLinesSync();
-    for (var line in lines) {
-      List<String> parts = line.split('=');
-      if (parts[0] == 'guest_os') {
-        return true;
-      }
-    }
-    return false;
-  }
-
-  void _getVms(context) async {
-    List<String> currentVms = [];
-    Map<String, VmInfo> activeVms = {};
-
-    await for (var entity
-        in Directory.current.list(recursive: false, followLinks: true)) {
-      if ((entity.path.endsWith('.conf')) && (_isValidConf(entity.path))) {
-        String name = path.basenameWithoutExtension(entity.path);
-        currentVms.add(name);
-        File pidFile = File('$name/$name.pid');
-        if (pidFile.existsSync()) {
-          String pid = pidFile.readAsStringSync().trim();
-          Directory procDir = Directory('/proc/$pid');
-          if (procDir.existsSync()) {
-            if (_activeVms.containsKey(name)) {
-              activeVms[name] = _activeVms[name]!;
-            } else {
-              activeVms[name] = _parseVmInfo(name);
-            }
-          }
-        }
-      }
-    }
-    currentVms.sort();
+  void _onRunPressed(String currentVm) async {
+    final info = await controller.runVm(currentVm);
     setState(() {
-      _currentVms = currentVms;
-      _activeVms = activeVms;
+      _activeVms[currentVm] = info;
     });
   }
 
-  Future<bool> _detectSsh(int port) async {
-    bool isSSH = false;
-    try {
-      Socket socket = await Socket.connect('localhost', port);
-      isSSH = await socket.any((event) => utf8.decode(event).contains('SSH'));
-      socket.close();
-      return isSSH;
-    } catch (exception) {
-      return false;
+  Future<void> _onStopPressed(BuildContext context, String currentVm) async {
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (context) => StopVmDialog(vmName: currentVm),
+    );
+    if (result ?? false) {
+      controller.killVm(currentVm);
+      setState(() {
+        _activeVms.remove(currentVm);
+      });
     }
   }
 
-  Widget _buildVmList() {
-    List<Widget> widgetList = [];
+  Future<void> _onDeletePressed(BuildContext context, String currentVm) async {
+    final result = await showDialog<String?>(
+      context: context,
+      builder: (context) => DeleteVmDialog(vmName: currentVm),
+    );
+    if ((result ?? 'cancel') != 'cancel') {
+      controller.deleteVm(currentVm, DeleteVmOption.values.byName(result!));
+    }
+  }
+
+  Future<void> _onSshConnectPressed(
+      BuildContext context, String currentVm, VmInfo vmInfo) async {
+    TextEditingController usernameController = TextEditingController();
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (BuildContext context) => SshConnectDialog(
+          vmName: currentVm, usernameController: usernameController),
+    );
+    if (result ?? false) {
+      controller.connectSsh(vmInfo, usernameController.text);
+    }
+  }
+
+  Widget _buildVmList(BuildContext context) {
     final Color buttonColor = Theme.of(context).brightness == Brightness.dark
         ? Colors.white70
         : Theme.of(context).colorScheme.primary;
-    widgetList.addAll(
-      [
+    return ListView(
+      padding: const EdgeInsets.all(16.0),
+      children: [
         Padding(
           padding: const EdgeInsets.symmetric(vertical: 16.0),
           child: Row(
@@ -191,20 +146,7 @@ class _ManagerState extends State<Manager> with PreferencesMixin {
               ),
               Text.rich(
                 TextSpan(
-                  recognizer: TapGestureRecognizer()
-                    ..onTap = () async {
-                      String? result =
-                          await FilePicker.platform.getDirectoryPath();
-                      if (result != null) {
-                        setState(() {
-                          Directory.current = result;
-                        });
-
-                        savePreference(
-                            prefWorkingDirectory, Directory.current.path);
-                        _getVms(context);
-                      }
-                    },
+                  recognizer: TapGestureRecognizer()..onTap = _onTapCurrentPath,
                   text: Directory.current.path,
                   style:
                       TextStyle(color: Theme.of(context).colorScheme.primary),
@@ -216,45 +158,33 @@ class _ManagerState extends State<Manager> with PreferencesMixin {
         const Divider(
           thickness: 2,
         ),
+        ..._currentVms.expand((vm) => _buildRow(context, vm, buttonColor))
       ],
-    );
-    List<List<Widget>> rows = _currentVms.map((vm) {
-      return _buildRow(vm, buttonColor);
-    }).toList();
-    for (var row in rows) {
-      widgetList.addAll(row);
-    }
-
-    return ListView(
-      padding: const EdgeInsets.all(16.0),
-      children: widgetList,
     );
   }
 
-  List<Widget> _buildRow(String currentVm, Color buttonColor) {
+  List<Widget> _buildRow(
+      BuildContext context, String currentVm, Color buttonColor) {
     final bool active = _activeVms.containsKey(currentVm);
     final bool sshy = _sshVms.contains(currentVm);
-    VmInfo vmInfo = VmInfo();
+    VmInfo vmInfo = active ? _activeVms[currentVm]! : VmInfo();
     String connectInfo = '';
-    if (active) {
-      vmInfo = _activeVms[currentVm]!;
-      if (vmInfo.spicePort != null) {
-        connectInfo += '${context.t('SPICE port')}: ${vmInfo.spicePort!} ';
-      }
-      if (vmInfo.sshPort != null && _terminalEmulator != null) {
-        connectInfo += '${context.t('SSH port')}: ${vmInfo.sshPort!} ';
-        _detectSsh(int.parse(vmInfo.sshPort!)).then((sshRunning) {
-          if (sshRunning && !sshy) {
-            setState(() {
-              _sshVms.add(currentVm);
-            });
-          } else if (!sshRunning && sshy) {
-            setState(() {
-              _sshVms.remove(currentVm);
-            });
-          }
-        });
-      }
+    if (vmInfo.spicePort != null) {
+      connectInfo += '${context.t('SPICE port')}: ${vmInfo.spicePort!} ';
+    }
+    if (vmInfo.sshPort != null) {
+      connectInfo += '${context.t('SSH port')}: ${vmInfo.sshPort!} ';
+      controller.detectSsh(int.parse(vmInfo.sshPort!)).then((sshRunning) {
+        if (sshRunning && !sshy) {
+          setState(() {
+            _sshVms.add(currentVm);
+          });
+        } else if (!sshRunning && sshy) {
+          setState(() {
+            _sshVms.remove(currentVm);
+          });
+        }
+      });
     }
     return <Widget>[
       ListTile(
@@ -263,203 +193,61 @@ class _ManagerState extends State<Manager> with PreferencesMixin {
             mainAxisSize: MainAxisSize.min,
             children: <Widget>[
               IconButton(
-                  icon: Icon(
-                    active ? Icons.play_arrow : Icons.play_arrow_outlined,
-                    color: active ? Colors.green : buttonColor,
-                    semanticLabel: active ? 'Running' : 'Run',
-                  ),
-                  onPressed: active
-                      ? null
-                      : () async {
-                          Map<String, VmInfo> activeVms = _activeVms;
-                          List<String> args = ['--vm', '$currentVm.conf'];
-                          if (_spicy) {
-                            args.addAll(['--display', 'spice']);
-                          }
-                          await Process.start('quickemu', args);
-                          VmInfo info = _parseVmInfo(currentVm);
-                          activeVms[currentVm] = info;
-                          setState(() {
-                            _activeVms = activeVms;
-                          });
-                        }),
+                icon: Icon(
+                  active ? Icons.play_arrow : Icons.play_arrow_outlined,
+                  color: active ? Colors.green : buttonColor,
+                  semanticLabel: active ? 'Running' : 'Run',
+                ),
+                onPressed: active ? null : () => _onRunPressed(currentVm),
+              ),
               IconButton(
                 icon: Icon(
                   active ? Icons.stop : Icons.stop_outlined,
                   color: active ? Colors.red : null,
                   semanticLabel: active ? 'Stop' : 'Not running',
                 ),
-                onPressed: !active
-                    ? null
-                    : () {
-                        showDialog<bool>(
-                          context: context,
-                          builder: (BuildContext context) => AlertDialog(
-                            title: Text(context.t('Stop The Virtual Machine?')),
-                            content: Text(context.t(
-                                'You are about to terminate the virtual machine',
-                                args: [currentVm])),
-                            actions: <Widget>[
-                              TextButton(
-                                onPressed: () => Navigator.pop(context, false),
-                                child: Text(context.t('Cancel')),
-                              ),
-                              TextButton(
-                                onPressed: () => Navigator.pop(context, true),
-                                child: Text(context.t('OK')),
-                              ),
-                            ],
-                          ),
-                        ).then((result) {
-                          result = result ?? false;
-                          if (result) {
-                            Process.run('killall', [currentVm]);
-                            setState(() {
-                              _activeVms.remove(currentVm);
-                            });
-                          }
-                        });
-                      },
+                onPressed:
+                    !active ? null : () => _onStopPressed(context, currentVm),
               ),
               IconButton(
-                icon: Icon(Icons.delete,
-                    color: active ? null : buttonColor,
-                    semanticLabel: 'Delete'),
-                onPressed: active
-                    ? null
-                    : () {
-                        showDialog<String?>(
-                          context: context,
-                          builder: (BuildContext context) => AlertDialog(
-                            title: Text('Delete $currentVm'),
-                            content: Text('You are about to delete $currentVm. This cannot be undone. Would you like to delete the disk image but keep the configuration, or delete the whole VM?'),
-                            actions: [
-                              TextButton(
-                                child: const Text('Cancel'),
-                                onPressed: () =>
-                                    Navigator.pop(context, 'cancel'),
-                              ),
-                              TextButton(
-                                child: const Text('Delete disk image'),
-                                onPressed: () => Navigator.pop(context, 'disk'),
-                              ),
-                              TextButton(
-                                child: const Text('Delete whole VM'),
-                                onPressed: () => Navigator.pop(context, 'vm'),
-                              ) // set up the AlertDialog
-                            ],
-                          ),
-                        ).then((result) async {
-                          result = result ?? 'cancel';
-                          if (result != 'cancel') {
-                            List<String> args = [
-                              '--vm',
-                              '$currentVm.conf',
-                              '--delete-$result'
-                            ];
-                            await Process.start('quickemu', args);
-                          }
-                        });
-                      },
+                icon: Icon(
+                  Icons.delete,
+                  color: active ? null : buttonColor,
+                  semanticLabel: 'Delete',
+                ),
+                onPressed:
+                    active ? null : () => _onDeletePressed(context, currentVm),
               ),
             ],
           )),
       if (connectInfo.isNotEmpty)
         ListTile(
-            title: Text(connectInfo, style: const TextStyle(fontSize: 12)),
-            trailing: Row(mainAxisSize: MainAxisSize.min, children: <Widget>[
-              IconButton(
-                icon: Icon(
-                  Icons.monitor,
-                  color: _spicy ? buttonColor : null,
-                  semanticLabel: 'Connect display with SPICE',
-                ),
-                tooltip: _spicy
-                    ? 'Connect display with SPICE'
-                    : 'SPICE client not found',
-                onPressed: !_spicy
-                    ? null
-                    : () {
-                        Process.start('spicy', ['-p', vmInfo.spicePort!]);
-                      },
+          title: Text(connectInfo, style: const TextStyle(fontSize: 12)),
+          trailing: Row(mainAxisSize: MainAxisSize.min, children: <Widget>[
+            IconButton(
+              icon: Icon(
+                Icons.monitor,
+                color: _spicy ? buttonColor : null,
+                semanticLabel: 'Connect display with SPICE',
               ),
-              IconButton(
-                icon: SvgPicture.asset('assets/images/console.svg',
-                    semanticsLabel: 'Connect with SSH',
-                    color: sshy ? buttonColor : Colors.grey),
-                tooltip: sshy
-                    ? 'Connect with SSH'
-                    : 'SSH server not detected on guest',
-                onPressed: !sshy
-                    ? null
-                    : () {
-                        TextEditingController usernameController =
-                            TextEditingController();
-                        showDialog<bool>(
-                          context: context,
-                          builder: (BuildContext context) => AlertDialog(
-                            title: Text('Launch SSH connection to $currentVm'),
-                            content: TextField(
-                              controller: usernameController,
-                              decoration: const InputDecoration(
-                                  hintText: "SSH username"),
-                            ),
-                            actions: <Widget>[
-                              TextButton(
-                                onPressed: () => Navigator.pop(context, false),
-                                child: const Text('Cancel'),
-                              ),
-                              TextButton(
-                                onPressed: () => Navigator.pop(context, true),
-                                child: const Text('Connect'),
-                              ),
-                            ],
-                          ),
-                        ).then((result) {
-                          result = result ?? false;
-                          if (result) {
-                            List<String> sshArgs = [
-                              'ssh',
-                              '-p',
-                              vmInfo.sshPort!,
-                              '${usernameController.text}@localhost'
-                            ];
-                            // Set the arguments to execute the ssh command in the default terminal.
-                            // Strip the extension as x-terminal-emulator may point to a .wrapper
-                            switch (path
-                                .basenameWithoutExtension(_terminalEmulator!)) {
-                              case 'gnome-terminal':
-                              case 'mate-terminal':
-                                sshArgs.insert(0, '--');
-                                break;
-                              case 'xterm':
-                              case 'lxterm':
-                              case 'uxterm':
-                              case 'konsole':
-                              case 'uxrvt':
-                              case 'xrvt':
-                              case 'sakura':
-                              case 'cool-retro-term':
-                              case 'pterm':
-                              case 'lxterminal':
-                              case 'tilix':
-                                sshArgs.insert(0, '-e');
-                                break;
-                              case 'terminator':
-                              case 'xfce4-terminal':
-                                sshArgs.insert(0, '-x');
-                                break;
-                              case 'guake':
-                                String command = sshArgs.join(' ');
-                                sshArgs = ['-e', command];
-                                break;
-                            }
-                            Process.start(_terminalEmulator!, sshArgs);
-                          }
-                        });
-                      },
-              ),
-            ])),
+              tooltip: _spicy
+                  ? 'Connect display with SPICE'
+                  : 'SPICE client not found',
+              onPressed: !_spicy ? null : () => controller.connectSpice(vmInfo),
+            ),
+            IconButton(
+              icon: SvgPicture.asset('assets/images/console.svg',
+                  semanticsLabel: 'Connect with SSH',
+                  color: sshy ? buttonColor : Colors.grey),
+              tooltip: sshy
+                  ? 'Connect with SSH'
+                  : 'SSH server not detected on guest',
+              onPressed: !sshy
+                  ? null
+                  : () => _onSshConnectPressed(context, currentVm, vmInfo),
+            ),
+          ]),
+        ),
       const Divider()
     ];
   }
@@ -470,7 +258,7 @@ class _ManagerState extends State<Manager> with PreferencesMixin {
       appBar: AppBar(
         title: Text(context.t('Manager')),
       ),
-      body: _buildVmList(),
+      body: Builder(builder: (context) => _buildVmList(context)),
     );
   }
 }
