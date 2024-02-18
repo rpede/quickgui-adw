@@ -12,6 +12,9 @@ class VmListTile extends StatelessWidget {
   final String name;
   final VmInfo? vmInfo;
 
+  bool get spice => vmInfo?.spicePort != null;
+  bool get ssh => vmInfo?.sshPort != null;
+
   void _onRunPressed(BuildContext context) async {
     context.read<ManagerCubit>().startVm(name);
   }
@@ -55,15 +58,67 @@ class VmListTile extends StatelessWidget {
     }
   }
 
+  List<Widget> _buildConnectionButtons(
+      BuildContext context, Color buttonColor) {
+    return [
+      IconButton(
+        icon: Icon(
+          Icons.monitor,
+          color: spice ? buttonColor : null,
+          semanticLabel: 'Connect display with SPICE',
+        ),
+        tooltip:
+            spice ? 'Connect display with SPICE' : 'SPICE client not found',
+        onPressed:
+            spice ? () => _onSpiceConnectPressed(context, vmInfo!) : null,
+      ),
+      IconButton(
+        icon: SvgPicture.asset('assets/images/console.svg',
+            semanticsLabel: 'Connect with SSH',
+            color: ssh ? buttonColor : Colors.grey),
+        tooltip: ssh ? 'Connect with SSH' : 'SSH server not detected on guest',
+        onPressed: ssh ? () => _onSshConnectPressed(context, vmInfo!) : null,
+      ),
+    ];
+  }
+
+  List<Widget> _buildManageButtons(BuildContext context, Color buttonColor) {
+    final active = vmInfo != null;
+    return [
+      IconButton(
+        icon: Icon(
+          active ? Icons.play_arrow : Icons.play_arrow_outlined,
+          color: active ? Colors.green : buttonColor,
+          semanticLabel: active ? 'Running' : 'Run',
+        ),
+        onPressed: active ? null : () => _onRunPressed(context),
+      ),
+      IconButton(
+        icon: Icon(
+          active ? Icons.stop : Icons.stop_outlined,
+          color: active ? Colors.red : null,
+          semanticLabel: active ? 'Stop' : 'Not running',
+        ),
+        onPressed: !active ? null : () => _onStopPressed(context),
+      ),
+      IconButton(
+        icon: Icon(
+          Icons.delete,
+          color: active ? null : buttonColor,
+          semanticLabel: 'Delete',
+        ),
+        onPressed: active ? null : () => _onDeletePressed(context, name),
+      ),
+    ];
+  }
+
   @override
   Widget build(BuildContext context) {
     final Color buttonColor = Theme.of(context).brightness == Brightness.dark
         ? Colors.white70
         : Theme.of(context).colorScheme.primary;
-    final active = vmInfo != null;
-    final spice = vmInfo?.spicePort != null;
-    final ssh = vmInfo?.sshPort != null;
-    String connectInfo = [
+    final connections = spice || ssh;
+    final connectionInfo = [
       if (spice) '${context.t('SPICE port')}: ${vmInfo?.spicePort!} ',
       if (ssh) '${context.t('SSH port')}: ${vmInfo?.sshPort!} ',
     ].join().trim();
@@ -72,57 +127,12 @@ class VmListTile extends StatelessWidget {
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
         children: <Widget>[
-          if (connectInfo.isNotEmpty) ...[
-            IconButton(
-              icon: Icon(
-                Icons.monitor,
-                color: spice ? buttonColor : null,
-                semanticLabel: 'Connect display with SPICE',
-              ),
-              tooltip: spice
-                  ? 'Connect display with SPICE'
-                  : 'SPICE client not found',
-              onPressed:
-                  spice ? () => _onSpiceConnectPressed(context, vmInfo!) : null,
-            ),
-            IconButton(
-              icon: SvgPicture.asset('assets/images/console.svg',
-                  semanticsLabel: 'Connect with SSH',
-                  color: ssh ? buttonColor : Colors.grey),
-              tooltip:
-                  ssh ? 'Connect with SSH' : 'SSH server not detected on guest',
-              onPressed:
-                  ssh ? () => _onSshConnectPressed(context, vmInfo!) : null,
-            ),
-          ],
-          IconButton(
-            icon: Icon(
-              active ? Icons.play_arrow : Icons.play_arrow_outlined,
-              color: active ? Colors.green : buttonColor,
-              semanticLabel: active ? 'Running' : 'Run',
-            ),
-            onPressed: active ? null : () => _onRunPressed(context),
-          ),
-          IconButton(
-            icon: Icon(
-              active ? Icons.stop : Icons.stop_outlined,
-              color: active ? Colors.red : null,
-              semanticLabel: active ? 'Stop' : 'Not running',
-            ),
-            onPressed: !active ? null : () => _onStopPressed(context),
-          ),
-          IconButton(
-            icon: Icon(
-              Icons.delete,
-              color: active ? null : buttonColor,
-              semanticLabel: 'Delete',
-            ),
-            onPressed: active ? null : () => _onDeletePressed(context, name),
-          ),
+          if (connections) ..._buildConnectionButtons(context, buttonColor),
+          ..._buildManageButtons(context, buttonColor)
         ],
       ),
-      subtitle: connectInfo.isNotEmpty
-          ? Text(connectInfo, style: const TextStyle(fontSize: 12))
+      subtitle: connections
+          ? Text(connectionInfo, style: const TextStyle(fontSize: 12))
           : null,
     );
   }
