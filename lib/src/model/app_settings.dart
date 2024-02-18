@@ -1,7 +1,8 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:quickgui/src/supported_locales.dart';
+
+import '../supported_locales.dart';
 
 class AppSettings extends ChangeNotifier {
   ThemeMode? _themeMode;

@@ -2,9 +2,9 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:gettext_i18n/gettext_i18n.dart';
-import 'package:quickgui/src/controllers/download_controller.dart';
-import 'package:quickgui/src/controllers/notification_controller.dart';
 
+import '../controllers/download_controller.dart';
+import '../controllers/notification_controller.dart';
 import '../model/operating_system.dart';
 import '../model/option.dart';
 import '../model/version.dart';

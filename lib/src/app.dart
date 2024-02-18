@@ -4,15 +4,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:gettext_i18n/gettext_i18n.dart';
 import 'package:provider/provider.dart';
-import 'package:quickgui/src/mixins/app_version.dart';
-import 'package:quickgui/src/pages/deget_not_found_page.dart';
-import 'package:quickgui/src/supported_locales.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'globals.dart';
+import 'mixins/app_version.dart';
 import 'mixins/preferences_mixin.dart';
 import 'model/app_settings.dart';
+import 'pages/deget_not_found_page.dart';
 import 'pages/main_page.dart';
+import 'supported_locales.dart';
 
 class App extends StatefulWidget {
   const App({super.key});
