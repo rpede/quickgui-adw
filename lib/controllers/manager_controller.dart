@@ -46,10 +46,10 @@ class ManagerController {
     return result.exitCode == 0;
   }
 
-  Future<bool> detectSsh(int port) async {
+  Future<bool> detectSsh(String port) async {
     bool isSSH = false;
     try {
-      Socket socket = await Socket.connect('localhost', port);
+      Socket socket = await Socket.connect('localhost', int.parse(port));
       isSSH = await socket.any((event) => utf8.decode(event).contains('SSH'));
       socket.close();
       return isSSH;
@@ -58,17 +58,12 @@ class ManagerController {
     }
   }
 
-  void connectSpice(VmInfo vmInfo) {
-    Process.start('spicy', ['-p', vmInfo.spicePort!]);
+  void connectSpice(String spicePort) {
+    Process.start('spicy', ['-p', spicePort]);
   }
 
-  Future<void> connectSsh(VmInfo vmInfo, String username) async {
-    List<String> sshArgs = [
-      'ssh',
-      '-p',
-      vmInfo.sshPort!,
-      '$username@localhost'
-    ];
+  Future<void> connectSsh(String sshPort, String username) async {
+    List<String> sshArgs = ['ssh', '-p', sshPort, '$username@localhost'];
     // Set the arguments to execute the ssh command in the default terminal.
     // Strip the extension as x-terminal-emulator may point to a .wrapper
     final terminalEmulator = await getTerminalEmulator();
@@ -103,18 +98,19 @@ class ManagerController {
     Process.start(terminalEmulator, sshArgs);
   }
 
-  Future<VmInfo> runVm(String currentVm) async {
-    List<String> args = ['--vm', '$currentVm.conf'];
+  Future<VmInfo> runVm(String name) async {
+    List<String> args = ['--vm', '$name.conf'];
     if (await detectSpice()) {
       args.addAll(['--display', 'spice']);
     }
     await Process.start('quickemu', args);
-    VmInfo info = _parseVmInfo(currentVm);
+    VmInfo info = _parseVmInfo(name);
     return info;
   }
 
   VmInfo _parseVmInfo(name) {
-    VmInfo info = VmInfo();
+    String? sshPort;
+    String? spicePort;
     File portsFile = File(name + '/' + name + '.ports');
     if (portsFile.existsSync()) {
       List<String> lines = portsFile.readAsLinesSync();
@@ -122,15 +118,15 @@ class ManagerController {
         List<String> parts = line.split(',');
         switch (parts[0]) {
           case 'ssh':
-            info.sshPort = parts[1];
+            sshPort = parts[1];
             break;
           case 'spice':
-            info.spicePort = parts[1];
+            spicePort = parts[1];
             break;
         }
       }
     }
-    return info;
+    return VmInfo(name: name, spicePort: spicePort, sshPort: sshPort);
   }
 
   Future<int> killVm(String name) async {

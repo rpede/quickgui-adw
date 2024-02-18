@@ -123,33 +123,10 @@ class _ManagerState extends State<Manager> with PreferencesMixin {
   }
 
   Widget _buildRow(BuildContext context, String currentVm, Color buttonColor) {
-    final bool active = _activeVms.containsKey(currentVm);
-    final bool sshy = _sshVms.contains(currentVm);
-    VmInfo vmInfo = active ? _activeVms[currentVm]! : VmInfo();
-    String connectInfo = '';
-    if (vmInfo.spicePort != null) {
-      connectInfo += '${context.t('SPICE port')}: ${vmInfo.spicePort!} ';
-    }
-    if (vmInfo.sshPort != null) {
-      connectInfo += '${context.t('SSH port')}: ${vmInfo.sshPort!} ';
-      controller.detectSsh(int.parse(vmInfo.sshPort!)).then((sshRunning) {
-        if (sshRunning && !sshy) {
-          setState(() {
-            _sshVms.add(currentVm);
-          });
-        } else if (!sshRunning && sshy) {
-          setState(() {
-            _sshVms.remove(currentVm);
-          });
-        }
-      });
-    }
+    VmInfo? vmInfo =
+        _activeVms.containsKey(currentVm) ? _activeVms[currentVm]! : null;
     return VmListTile(
       name: currentVm,
-      connectInfo: connectInfo,
-      active: active,
-      sshy: sshy,
-      spicy: _spicy,
       vmInfo: vmInfo,
       controller: controller,
     );

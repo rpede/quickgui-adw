@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:gettext_i18n/gettext_i18n.dart';
 import 'package:quickgui/controllers/manager_controller.dart';
 import 'package:quickgui/model/vminfo.dart';
 
@@ -9,20 +10,12 @@ import 'dialogs.dart';
 class VmListTile extends StatelessWidget {
   const VmListTile(
       {required this.name,
-      required this.connectInfo,
-      required this.active,
-      required this.sshy,
-      required this.spicy,
       required this.controller,
       required this.vmInfo,
       super.key});
   final String name;
-  final String connectInfo;
-  final bool active;
-  final bool sshy;
-  final bool spicy;
   final ManagerController controller;
-  final VmInfo vmInfo;
+  final VmInfo? vmInfo;
 
   void _onRunPressed(String currentVm) async {
     final info = await controller.runVm(currentVm);
@@ -55,7 +48,7 @@ class VmListTile extends StatelessWidget {
   }
 
   Future<void> _onSshConnectPressed(
-      BuildContext context, String currentVm, VmInfo vmInfo) async {
+      BuildContext context, String currentVm, String sshPort) async {
     TextEditingController usernameController = TextEditingController();
     final result = await showDialog<bool>(
       context: context,
@@ -63,7 +56,7 @@ class VmListTile extends StatelessWidget {
           vmName: currentVm, usernameController: usernameController),
     );
     if (result ?? false) {
-      controller.connectSsh(vmInfo, usernameController.text);
+      controller.connectSsh(sshPort, usernameController.text);
     }
   }
 
@@ -72,6 +65,28 @@ class VmListTile extends StatelessWidget {
     final Color buttonColor = Theme.of(context).brightness == Brightness.dark
         ? Colors.white70
         : Theme.of(context).colorScheme.primary;
+    final active = vmInfo != null;
+    final spice = vmInfo?.spicePort != null;
+    final ssh = vmInfo?.sshPort != null;
+    String connectInfo = '';
+    if (spice) {
+      connectInfo += '${context.t('SPICE port')}: ${vmInfo?.spicePort!} ';
+    }
+    if (ssh) {
+      connectInfo += '${context.t('SSH port')}: ${vmInfo?.sshPort!} ';
+      // TODO fix ssh check
+      // controller.detectSsh(vmInfo!.sshPort!).then((sshRunning) {
+      //   if (sshRunning && !sshy) {
+      //     setState(() {
+      //       _sshVms.add(currentVm);
+      //     });
+      //   } else if (!sshRunning && sshy) {
+      //     setState(() {
+      //       _sshVms.remove(currentVm);
+      //     });
+      //   }
+      // });
+    }
     return ListTile(
       title: Text(name),
       trailing: Row(
@@ -81,24 +96,25 @@ class VmListTile extends StatelessWidget {
             IconButton(
               icon: Icon(
                 Icons.monitor,
-                color: spicy ? buttonColor : null,
+                color: spice ? buttonColor : null,
                 semanticLabel: 'Connect display with SPICE',
               ),
-              tooltip: spicy
+              tooltip: spice
                   ? 'Connect display with SPICE'
                   : 'SPICE client not found',
-              onPressed: !spicy ? null : () => controller.connectSpice(vmInfo),
+              onPressed: spice
+                  ? () => controller.connectSpice(vmInfo!.spicePort!)
+                  : null,
             ),
             IconButton(
               icon: SvgPicture.asset('assets/images/console.svg',
                   semanticsLabel: 'Connect with SSH',
-                  color: sshy ? buttonColor : Colors.grey),
-              tooltip: sshy
-                  ? 'Connect with SSH'
-                  : 'SSH server not detected on guest',
-              onPressed: !sshy
-                  ? null
-                  : () => _onSshConnectPressed(context, name, vmInfo),
+                  color: ssh ? buttonColor : Colors.grey),
+              tooltip:
+                  ssh ? 'Connect with SSH' : 'SSH server not detected on guest',
+              onPressed: ssh
+                  ? () => _onSshConnectPressed(context, name, vmInfo!.sshPort!)
+                  : null,
             ),
           ],
           IconButton(
