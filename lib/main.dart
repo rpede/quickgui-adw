@@ -1,11 +1,14 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
 import 'package:tuple/tuple.dart';
 
 import 'app.dart';
+import 'bloc/manager_cubit.dart';
+import 'infrastructure/manager_infrastructure.dart';
 import 'mixins/app_version.dart';
 import 'model/app_settings.dart';
 import 'model/operating_system.dart';
@@ -68,7 +71,14 @@ void main() async {
       providers: [
         ChangeNotifierProvider(create: (_) => AppSettings()),
       ],
-      builder: (context, _) => const App(),
+      builder: (context, _) => MultiBlocProvider(
+        providers: [
+          BlocProvider(
+              create: (_) =>
+                  ManagerCubit(ManagerInfrastructure())..checkEnvironment())
+        ],
+        child: const App(),
+      ),
     ),
   );
 }

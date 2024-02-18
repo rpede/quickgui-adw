@@ -1,62 +1,57 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:gettext_i18n/gettext_i18n.dart';
-import 'package:quickgui/controllers/manager_controller.dart';
-import 'package:quickgui/model/vminfo.dart';
 
-import '../../model/manager.dart';
+import '../../bloc/manager_cubit.dart';
+import '../../model/vminfo.dart';
 import 'dialogs.dart';
 
 class VmListTile extends StatelessWidget {
-  const VmListTile(
-      {required this.name,
-      required this.controller,
-      required this.vmInfo,
-      super.key});
+  const VmListTile({required this.name, required this.vmInfo, super.key});
   final String name;
-  final ManagerController controller;
   final VmInfo? vmInfo;
 
-  void _onRunPressed(String currentVm) async {
-    final info = await controller.runVm(currentVm);
-    // setState(() {
-    //   _activeVms[currentVm] = info;
-    // });
+  void _onRunPressed(BuildContext context) async {
+    context.read<ManagerCubit>().startVm(name);
   }
 
-  Future<void> _onStopPressed(BuildContext context, String currentVm) async {
+  Future<void> _onStopPressed(BuildContext context) async {
+    final cubit = context.read<ManagerCubit>();
     final result = await showDialog<bool>(
       context: context,
-      builder: (context) => StopVmDialog(vmName: currentVm),
+      builder: (context) => StopVmDialog(vmName: name),
     );
     if (result ?? false) {
-      controller.killVm(currentVm);
-      // setState(() {
-      //   _activeVms.remove(currentVm);
-      // });
+      cubit.stopVm(name);
     }
   }
 
   Future<void> _onDeletePressed(BuildContext context, String currentVm) async {
+    final cubit = context.read<ManagerCubit>();
     final result = await showDialog<String?>(
       context: context,
       builder: (context) => DeleteVmDialog(vmName: currentVm),
     );
     if ((result ?? 'cancel') != 'cancel') {
-      controller.deleteVm(currentVm, DeleteVmOption.values.byName(result!));
+      cubit.deleteVm(currentVm, result!);
     }
   }
 
-  Future<void> _onSshConnectPressed(
-      BuildContext context, String currentVm, String sshPort) async {
+  void _onSpiceConnectPressed(BuildContext context, VmInfo vmInfo) {
+    context.read<ManagerCubit>().connectSpice(vmInfo);
+  }
+
+  Future<void> _onSshConnectPressed(BuildContext context, VmInfo vmInfo) async {
+    final cubit = context.read<ManagerCubit>();
     TextEditingController usernameController = TextEditingController();
     final result = await showDialog<bool>(
       context: context,
       builder: (BuildContext context) => SshConnectDialog(
-          vmName: currentVm, usernameController: usernameController),
+          vmName: vmInfo.name, usernameController: usernameController),
     );
     if (result ?? false) {
-      controller.connectSsh(sshPort, usernameController.text);
+      cubit.connectSsh(vmInfo, usernameController.text);
     }
   }
 
@@ -68,25 +63,10 @@ class VmListTile extends StatelessWidget {
     final active = vmInfo != null;
     final spice = vmInfo?.spicePort != null;
     final ssh = vmInfo?.sshPort != null;
-    String connectInfo = '';
-    if (spice) {
-      connectInfo += '${context.t('SPICE port')}: ${vmInfo?.spicePort!} ';
-    }
-    if (ssh) {
-      connectInfo += '${context.t('SSH port')}: ${vmInfo?.sshPort!} ';
-      // TODO fix ssh check
-      // controller.detectSsh(vmInfo!.sshPort!).then((sshRunning) {
-      //   if (sshRunning && !sshy) {
-      //     setState(() {
-      //       _sshVms.add(currentVm);
-      //     });
-      //   } else if (!sshRunning && sshy) {
-      //     setState(() {
-      //       _sshVms.remove(currentVm);
-      //     });
-      //   }
-      // });
-    }
+    String connectInfo = [
+      if (spice) '${context.t('SPICE port')}: ${vmInfo?.spicePort!} ',
+      if (ssh) '${context.t('SSH port')}: ${vmInfo?.sshPort!} ',
+    ].join().trim();
     return ListTile(
       title: Text(name),
       trailing: Row(
@@ -102,9 +82,8 @@ class VmListTile extends StatelessWidget {
               tooltip: spice
                   ? 'Connect display with SPICE'
                   : 'SPICE client not found',
-              onPressed: spice
-                  ? () => controller.connectSpice(vmInfo!.spicePort!)
-                  : null,
+              onPressed:
+                  spice ? () => _onSpiceConnectPressed(context, vmInfo!) : null,
             ),
             IconButton(
               icon: SvgPicture.asset('assets/images/console.svg',
@@ -112,9 +91,8 @@ class VmListTile extends StatelessWidget {
                   color: ssh ? buttonColor : Colors.grey),
               tooltip:
                   ssh ? 'Connect with SSH' : 'SSH server not detected on guest',
-              onPressed: ssh
-                  ? () => _onSshConnectPressed(context, name, vmInfo!.sshPort!)
-                  : null,
+              onPressed:
+                  ssh ? () => _onSshConnectPressed(context, vmInfo!) : null,
             ),
           ],
           IconButton(
@@ -123,7 +101,7 @@ class VmListTile extends StatelessWidget {
               color: active ? Colors.green : buttonColor,
               semanticLabel: active ? 'Running' : 'Run',
             ),
-            onPressed: active ? null : () => _onRunPressed(name),
+            onPressed: active ? null : () => _onRunPressed(context),
           ),
           IconButton(
             icon: Icon(
@@ -131,7 +109,7 @@ class VmListTile extends StatelessWidget {
               color: active ? Colors.red : null,
               semanticLabel: active ? 'Stop' : 'Not running',
             ),
-            onPressed: !active ? null : () => _onStopPressed(context, name),
+            onPressed: !active ? null : () => _onStopPressed(context),
           ),
           IconButton(
             icon: Icon(

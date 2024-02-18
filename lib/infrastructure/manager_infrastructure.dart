@@ -5,12 +5,11 @@ import 'dart:io';
 import 'package:path/path.dart' as path;
 import 'package:quickgui/model/vminfo.dart';
 
-import '../model/manager.dart';
-
-class ManagerController {
+class ManagerInfrastructure {
   final List<String> _supportedTerminalEmulators = [
     'cool-retro-term',
     'gnome-terminal',
+    'kgx',
     'guake',
     'mate-terminal',
     'konsole',
@@ -58,16 +57,19 @@ class ManagerController {
     }
   }
 
-  void connectSpice(String spicePort) {
-    Process.start('spicy', ['-p', spicePort]);
+  Future<Process> connectSpice(String spicePort) {
+    return Process.start('spicy', ['-p', spicePort]);
   }
 
-  Future<void> connectSsh(String sshPort, String username) async {
+  Future<Process> connectSsh(String sshPort, String username) async {
     List<String> sshArgs = ['ssh', '-p', sshPort, '$username@localhost'];
     // Set the arguments to execute the ssh command in the default terminal.
     // Strip the extension as x-terminal-emulator may point to a .wrapper
     final terminalEmulator = await getTerminalEmulator();
-    if (terminalEmulator == null) return;
+    if (terminalEmulator == null) {
+      throw Exception(
+          'Terminal emulator "$terminalEmulator" is not supported!');
+    }
     switch (path.basenameWithoutExtension(terminalEmulator)) {
       case 'gnome-terminal':
       case 'mate-terminal':
@@ -95,7 +97,7 @@ class ManagerController {
         sshArgs = ['-e', command];
         break;
     }
-    Process.start(terminalEmulator, sshArgs);
+    return Process.start(terminalEmulator, sshArgs);
   }
 
   Future<VmInfo> runVm(String name) async {
@@ -104,11 +106,11 @@ class ManagerController {
       args.addAll(['--display', 'spice']);
     }
     await Process.start('quickemu', args);
-    VmInfo info = _parseVmInfo(name);
+    VmInfo info = parseVmInfo(name);
     return info;
   }
 
-  VmInfo _parseVmInfo(name) {
+  VmInfo parseVmInfo(name) {
     String? sshPort;
     String? spicePort;
     File portsFile = File(name + '/' + name + '.ports');
@@ -134,34 +136,33 @@ class ManagerController {
     return result.exitCode;
   }
 
-  Future<VmStatus> getVms(Map<String, VmInfo> alreadyActiveVms) async {
-    List<String> currentVms = [];
-    Map<String, VmInfo> activeVms = {};
+  Future<int> deleteVm(String name, String option) async {
+    assert(['vm', 'disk'].contains(option));
+    List<String> args = ['--vm', '$name.conf', '--delete-$option'];
+    final result = await Process.run('quickemu', args);
+    return result.exitCode;
+  }
 
+  Stream<({String name, bool active})> getVms() async* {
     await for (var entity
         in Directory.current.list(recursive: false, followLinks: true)) {
-      if ((entity.path.endsWith('.conf')) && (_isValidConf(entity.path))) {
+      if ((entity.path.endsWith('.conf')) && (isValidConf(entity.path))) {
         String name = path.basenameWithoutExtension(entity.path);
-        currentVms.add(name);
+        var active = false;
         File pidFile = File('$name/$name.pid');
         if (pidFile.existsSync()) {
           String pid = pidFile.readAsStringSync().trim();
           Directory procDir = Directory('/proc/$pid');
           if (procDir.existsSync()) {
-            if (alreadyActiveVms.containsKey(name)) {
-              activeVms[name] = alreadyActiveVms[name]!;
-            } else {
-              activeVms[name] = _parseVmInfo(name);
-            }
+            active = true;
           }
         }
+        yield (name: name, active: active);
       }
     }
-    currentVms.sort();
-    return (currentVms: currentVms, activeVms: activeVms);
   }
 
-  bool _isValidConf(conf) {
+  bool isValidConf(conf) {
     List<String> lines = File(conf).readAsLinesSync();
     for (var line in lines) {
       List<String> parts = line.split('=');
@@ -170,10 +171,5 @@ class ManagerController {
       }
     }
     return false;
-  }
-
-  Future<void> deleteVm(String name, DeleteVmOption option) async {
-    List<String> args = ['--vm', '$name.conf', '--delete-${option.name}'];
-    await Process.start('quickemu', args);
   }
 }
