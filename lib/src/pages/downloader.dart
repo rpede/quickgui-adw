@@ -1,10 +1,9 @@
-import 'dart:async';
-import 'dart:convert';
 import 'dart:io';
 
-import 'package:desktop_notifications/desktop_notifications.dart';
 import 'package:flutter/material.dart';
 import 'package:gettext_i18n/gettext_i18n.dart';
+import 'package:quickgui/src/controllers/download_controller.dart';
+import 'package:quickgui/src/controllers/notification_controller.dart';
 
 import '../model/operating_system.dart';
 import '../model/option.dart';
@@ -30,101 +29,47 @@ class Downloader extends StatefulWidget {
 }
 
 class _DownloaderState extends State<Downloader> {
-  final notificationsClient = NotificationsClient();
-  final wgetPattern = RegExp("( [0-9.]+%)");
-  final macRecoveryPattern = RegExp("([0-9]+\\.[0-9])");
-  final ariaPattern = RegExp("([0-9.]+%)");
-  late final Stream<double> _progressStream;
+  final notificationController = NotificationController();
+  late DownloadController controller;
   bool _downloadFinished = false;
-  var controller = StreamController<double>();
-  Process? _process;
 
   @override
   void initState() {
-    _progressStream = progressStream();
     super.initState();
-  }
-
-  void parseWgetProgress(String line) {
-    var matches = wgetPattern.allMatches(line).toList();
-    if (matches.isNotEmpty) {
-      var percent = matches[0].group(1);
-      if (percent != null) {
-        var value = double.parse(percent.replaceAll('%', '')) / 100.0;
-        controller.add(value);
-      }
-    }
-  }
-
-  void parseAriaProgress(String line) {
-    var matches = ariaPattern.allMatches(line).toList();
-    if (matches.isNotEmpty) {
-      var percent = matches[0].group(1);
-      if (percent != null) {
-        var value = double.parse(percent.replaceAll('%', '')) / 100.0;
-        controller.add(value);
-      }
-    }
-  }
-
-  void parseMacRecoveryProgress(String line) {
-    var matches = macRecoveryPattern.allMatches(line).toList();
-    if (matches.isNotEmpty) {
-      var size = matches[0].group(1);
-      if (size != null) {
-        var value = double.parse(size);
-        controller.add(value);
-      }
-    }
-  }
-
-  Stream<double> progressStream() {
-    var options = [widget.operatingSystem.code, widget.version.version];
-    if (widget.option != null) {
-      options.add(widget.option!.option);
-    }
-    Process.start('quickget', options).then((process) {
-      if (widget.option!.downloader == 'wget') {
-        process.stderr.transform(utf8.decoder).forEach(parseWgetProgress);
-      } else if (widget.option!.downloader == 'zsync') {
-        controller.add(-1);
-      } else if (widget.option!.downloader == 'macrecovery') {
-        process.stdout
-            .transform(utf8.decoder)
-            .forEach(parseMacRecoveryProgress);
-      } else if (widget.option!.downloader == 'aria2c') {
-        process.stderr.transform(utf8.decoder).forEach(parseAriaProgress);
-      }
-
-      process.exitCode.then((value) {
-        bool cancelled = value.isNegative;
-        controller.close();
-        setState(() {
-          _downloadFinished = true;
-          notificationsClient.notify(
-            cancelled
-                ? context.t('Download cancelled')
-                : context.t('Download complete'),
-            body: cancelled
-                ? context.t(
-                    'Download of {0} has been canceled.',
-                    args: [widget.operatingSystem.name],
-                  )
-                : context.t(
-                    'Download of {0} has completed.',
-                    args: [widget.operatingSystem.name],
-                  ),
-            appName: 'Quickgui',
-            expireTimeoutMs: 10000, /* 10 seconds */
-          );
-        });
-      });
-
+    controller = DownloadController(
+        operatingSystem: widget.operatingSystem,
+        version: widget.version,
+        option: widget.option);
+    controller.start().then((exitCode) {
       setState(() {
-        _process = process;
+        _downloadFinished = true;
       });
+      _showNotification(cancelled: exitCode.isNegative);
     });
-    return controller.stream;
+  }
+
+  @override
+  void dispose() {
+    controller.stop();
+    super.dispose();
+  }
+
+  _showNotification({required bool cancelled}) {
+    if (cancelled) {
+      notificationController.notify(
+        context.t('Download cancelled'),
+        body: context.t('Download of {0} has been canceled.',
+            args: [widget.operatingSystem.name]),
+      );
+    } else {
+      notificationController.notify(
+        context.t('Download complete'),
+        body: context.t(
+          'Download of {0} has completed.',
+          args: [widget.operatingSystem.name],
+        ),
+      );
+    }
   }
 
   @override
@@ -133,9 +78,7 @@ class _DownloaderState extends State<Downloader> {
       appBar: AppBar(
         title: Text(
           context.t('Downloading {0}', args: [
-            '${widget.operatingSystem.name} ${widget.version.version}${widget.option!.option.isNotEmpty
-                    ? ' (${widget.option!.option})'
-                    : ''}'
+            '${widget.operatingSystem.name} ${widget.version.version} ${widget.option?.option ?? ''}'
           ]),
         ),
         automaticallyImplyLeading: false,
@@ -144,7 +87,7 @@ class _DownloaderState extends State<Downloader> {
         children: [
           Expanded(
             child: StreamBuilder(
-              stream: _progressStream,
+              stream: controller.progressStream,
               builder: (context, AsyncSnapshot<double> snapshot) {
                 var data = !snapshot.hasData ||
                         widget.option!.downloader != 'wget' ||
@@ -174,9 +117,7 @@ class _DownloaderState extends State<Downloader> {
             ),
           ),
           CancelDismissButton(
-            onCancel: () {
-              _process?.kill();
-            },
+            onCancel: () => controller.stop(),
             downloadFinished: _downloadFinished,
           ),
         ],

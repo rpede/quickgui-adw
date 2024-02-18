@@ -28,6 +28,17 @@ class _DownloaderMenuState extends State<DownloaderMenu> with PreferencesMixin {
     });
   }
 
+  void _onTapPath() async {
+    var folder = await FilePicker.platform
+        .getDirectoryPath(dialogTitle: "Pick a folder");
+    if (folder != null) {
+      setState(() {
+        Directory.current = folder;
+      });
+      savePreference(prefWorkingDirectory, Directory.current.path);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Expanded(
@@ -50,18 +61,7 @@ class _DownloaderMenuState extends State<DownloaderMenu> with PreferencesMixin {
                   ),
                   Text.rich(
                     TextSpan(
-                      recognizer: TapGestureRecognizer()
-                        ..onTap = () async {
-                          var folder = await FilePicker.platform
-                              .getDirectoryPath(dialogTitle: "Pick a folder");
-                          if (folder != null) {
-                            setState(() {
-                              Directory.current = folder;
-                            });
-                            savePreference(
-                                prefWorkingDirectory, Directory.current.path);
-                          }
-                        },
+                      recognizer: TapGestureRecognizer()..onTap = _onTapPath,
                       text: Directory.current.path,
                       style: TextStyle(
                           color: Theme.of(context).colorScheme.primary),

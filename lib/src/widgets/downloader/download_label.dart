@@ -12,20 +12,23 @@ class DownloadLabel extends StatelessWidget {
   final double? data;
   final String downloader;
 
+  String _downloadStatus(BuildContext context) {
+    if (downloadFinished) return context.t('Download finished.');
+    if (data == null) return context.t('Waiting for download to start');
+    if (downloader == 'zsync') {
+      return context.t("Downloading (no progress available)...");
+    }
+    if (downloader == 'wget' || downloader == 'aria2c') {
+      return context.t('Downloading... {0}%', args: [(data! * 100).toInt()]);
+    }
+    return context.t('{0} Mbs downloaded', args: [data!]);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.all(8.0),
-      child: downloadFinished
-          ? Text(context.t('Download finished.'))
-          : data != null
-              ? downloader != 'zsync'
-                  ? downloader == 'wget' || downloader == 'aria2c'
-                      ? Text(context.t('Downloading... {0}%',
-                          args: [(data! * 100).toInt()]))
-                      : Text(context.t('{0} Mbs downloaded', args: [data!]))
-                  : Text(context.t("Downloading (no progress available)..."))
-              : Text(context.t('Waiting for download to start')),
+      child: Text(_downloadStatus(context))
     );
   }
 }
