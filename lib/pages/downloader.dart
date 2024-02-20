@@ -1,9 +1,11 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gettext_i18n/gettext_i18n.dart';
 
-import '../controllers/download_controller.dart';
+import '../bloc/download_cubit.dart';
+import '../bloc/download_state.dart';
 import '../controllers/notification_controller.dart';
 import '../model/operating_system.dart';
 import '../model/option.dart';
@@ -25,49 +27,35 @@ class Downloader extends StatefulWidget {
   final Option? option;
 
   @override
-  _DownloaderState createState() => _DownloaderState();
+  State<Downloader> createState() => _DownloaderState();
 }
 
 class _DownloaderState extends State<Downloader> {
   final notificationController = NotificationController();
-  late DownloadController controller;
-  bool _downloadFinished = false;
 
   @override
   void initState() {
     super.initState();
-    controller = DownloadController(
-        operatingSystem: widget.operatingSystem,
-        version: widget.version,
-        option: widget.option);
-    controller.start().then((exitCode) {
-      setState(() {
-        _downloadFinished = true;
-      });
-      _showNotification(cancelled: exitCode.isNegative);
-    });
+    context
+        .read<DownloadCubit>()
+        .start(widget.operatingSystem, widget.version, widget.option)
+        .then((completed) => _showNotification(completed: completed));
   }
 
-  @override
-  void dispose() {
-    controller.stop();
-    super.dispose();
-  }
-
-  _showNotification({required bool cancelled}) {
-    if (cancelled) {
-      notificationController.notify(
-        context.t('Download cancelled'),
-        body: context.t('Download of {0} has been canceled.',
-            args: [widget.operatingSystem.name]),
-      );
-    } else {
+  _showNotification({required bool completed}) {
+    if (completed) {
       notificationController.notify(
         context.t('Download complete'),
         body: context.t(
           'Download of {0} has completed.',
           args: [widget.operatingSystem.name],
         ),
+      );
+    } else {
+      notificationController.notify(
+        context.t('Download cancelled'),
+        body: context.t('Download of {0} has been canceled.',
+            args: [widget.operatingSystem.name]),
       );
     }
   }
@@ -86,39 +74,38 @@ class _DownloaderState extends State<Downloader> {
       body: Column(
         children: [
           Expanded(
-            child: StreamBuilder(
-              stream: controller.progressStream,
-              builder: (context, AsyncSnapshot<double> snapshot) {
-                var data = !snapshot.hasData ||
-                        widget.option!.downloader != 'wget' ||
-                        widget.option!.downloader != 'aria2c'
-                    ? null
-                    : snapshot.data;
+            child: BlocBuilder<DownloadCubit, DownloadState>(
+              builder: (context, state) {
                 return Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    DownloadLabel(
-                      downloadFinished: _downloadFinished,
-                      data: snapshot.hasData ? snapshot.data : null,
-                      downloader: widget.option!.downloader,
-                    ),
-                    DownloadProgressBar(
-                      downloadFinished: _downloadFinished,
-                      data: snapshot.hasData ? data : null,
-                    ),
+                    for (final download in state) ...[
+                      DownloadLabel(
+                        downloadFinished: download.success,
+                        data: download.progress,
+                        downloader: widget.option!.downloader,
+                      ),
+                      DownloadProgressBar(
+                        downloadFinished: download.success,
+                        data: download.progress,
+                      ),
+                      CancelDismissButton(
+                        onCancel: () => {},
+                        downloadFinished: download.success,
+                      ),
+                      const Divider(),
+                    ],
                     Padding(
                       padding: const EdgeInsets.only(top: 32),
-                      child: Text(context.t('Target folder : {0}',
-                          args: [Directory.current.path])),
+                      child: Text(
+                        context.t('Target folder : {0}',
+                            args: [Directory.current.path]),
+                      ),
                     ),
                   ],
                 );
               },
             ),
-          ),
-          CancelDismissButton(
-            onCancel: () => controller.stop(),
-            downloadFinished: _downloadFinished,
           ),
         ],
       ),

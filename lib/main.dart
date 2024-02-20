@@ -7,7 +7,9 @@ import 'package:provider/provider.dart';
 import 'package:tuple/tuple.dart';
 
 import 'app.dart';
+import 'bloc/download_cubit.dart';
 import 'bloc/manager_cubit.dart';
+import 'infrastructure/download_infrastructure.dart';
 import 'infrastructure/manager_infrastructure.dart';
 import 'mixins/app_version.dart';
 import 'model/app_settings.dart';
@@ -75,7 +77,8 @@ void main() async {
         providers: [
           BlocProvider(
               create: (_) =>
-                  ManagerCubit(ManagerInfrastructure())..checkEnvironment())
+                  ManagerCubit(ManagerInfrastructure())..checkEnvironment()),
+          BlocProvider(create: (_) => DownloadCubit(DownloadInfrastructure())),
         ],
         child: const App(),
       ),

@@ -25,12 +25,7 @@ class Manager extends StatefulWidget {
 }
 
 class _ManagerState extends State<Manager> with PreferencesMixin {
-  // final controller = ManagerController();
-  // List<String> _currentVms = [];
-  // Map<String, VmInfo> _activeVms = {};
-  // bool _spicy = false;
-  // final List<String> _sshVms = [];
-  Timer? refreshTimer;
+  Timer? _refreshTimer;
 
   @override
   void initState() {
@@ -49,14 +44,14 @@ class _ManagerState extends State<Manager> with PreferencesMixin {
       ); // Reload VM list when we enter the page.
     });
 
-    refreshTimer = Timer.periodic(const Duration(seconds: 5), (Timer t) {
+    _refreshTimer = Timer.periodic(const Duration(seconds: 5), (Timer t) {
       context.read<ManagerCubit>().refreshVms();
     }); // Reload VM list every 5 seconds.
   }
 
   @override
   void dispose() {
-    refreshTimer?.cancel();
+    _refreshTimer?.cancel();
     super.dispose();
   }
 
