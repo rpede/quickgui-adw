@@ -3,7 +3,8 @@ import 'dart:core';
 import 'dart:io';
 
 import 'package:path/path.dart' as path;
-import 'package:quickgui/model/vminfo.dart';
+
+import '../model/vminfo.dart';
 
 class ManagerInfrastructure {
   final List<String> _supportedTerminalEmulators = [

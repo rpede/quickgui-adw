@@ -7,5 +7,3 @@ class OperatingSystem {
   final String code;
   List<Version> versions;
 }
-
-var gOperatingSystems = <OperatingSystem>[];

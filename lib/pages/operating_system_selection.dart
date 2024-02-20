@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gettext_i18n/gettext_i18n.dart';
 
-import '../model/operating_system.dart';
+import '../bloc/download_cubit.dart';
+import '../bloc/download_state.dart';
 import '../widgets/downloader/operating_system_icon.dart';
 
 class OperatingSystemSelection extends StatefulWidget {
@@ -24,9 +26,6 @@ class _OperatingSystemSelectionState extends State<OperatingSystemSelection> {
 
   @override
   Widget build(BuildContext context) {
-    var list = gOperatingSystems
-        .where((os) => os.name.toLowerCase().contains(term.toLowerCase()))
-        .toList();
     return Scaffold(
       appBar: AppBar(
         title: Text(context.t('Select operating system')),
@@ -65,28 +64,31 @@ class _OperatingSystemSelectionState extends State<OperatingSystemSelection> {
           ),
         ),
       ),
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            ListView.builder(
-              padding: const EdgeInsets.only(top: 4),
-              shrinkWrap: true,
-              itemCount: list.length,
-              itemBuilder: (context, index) {
-                var item = list[index];
-                return Card(
-                  child: ListTile(
-                    title: Text(item.name),
-                    leading: OperatingSystemIcon(item: item),
-                    onTap: () {
-                      Navigator.of(context).pop(item);
-                    },
-                  ),
-                );
-              },
-            ),
-          ],
-        ),
+      body: BlocBuilder<DownloadCubit, DownloaderState>(
+        builder: (context, state) {
+          var list = state.choices
+              .where((os) => os.name.toLowerCase().contains(term.toLowerCase()))
+              .toList();
+          if (list.isEmpty) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          return ListView.builder(
+            padding: const EdgeInsets.only(top: 4),
+            itemCount: list.length,
+            itemBuilder: (context, index) {
+              var item = list[index];
+              return Card(
+                child: ListTile(
+                  title: Text(item.name),
+                  leading: OperatingSystemIcon(item: item),
+                  onTap: () {
+                    Navigator.of(context).pop(item);
+                  },
+                ),
+              );
+            },
+          );
+        },
       ),
     );
   }

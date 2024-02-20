@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import '../model/download_description.dart';
 import '../model/operating_system.dart';
 import '../model/option.dart';
 import '../model/version.dart';
@@ -11,15 +12,51 @@ class DownloadInfrastructure {
   final macRecoveryPattern = RegExp("([0-9]+\\.[0-9])");
   final ariaPattern = RegExp("([0-9.]+%)");
 
-  Future<Process> start({
-    required final OperatingSystem operatingSystem,
-    required final Version version,
-    required final Option? option,
-  }) async {
+  Future<List<OperatingSystem>> loadChoices() async {
+    final process = await Process.run('quickget', ['list_csv']);
+    final stdout = process.stdout as String;
+    final output = <OperatingSystem>[];
+
+    OperatingSystem? currentOperatingSystem;
+    Version? currentVersion;
+
+    stdout
+        .split('\n')
+        .skip(1)
+        .where((element) => element.isNotEmpty)
+        .map((e) => e.trim())
+        .forEach((element) {
+      var chunks = element.split(",");
+      List<String> supportedVersion;
+      if (chunks.length == 4) // Legacy version of quickget
+      {
+        supportedVersion = [...chunks, "wget"];
+      } else {
+        supportedVersion = chunks.take(5).toList();
+      }
+
+      if (currentOperatingSystem?.code != supportedVersion[1]) {
+        currentOperatingSystem =
+            OperatingSystem(supportedVersion[0], supportedVersion[1]);
+        output.add(currentOperatingSystem!);
+        currentVersion = null;
+      }
+      if (currentVersion?.version != supportedVersion[2]) {
+        currentVersion = Version(supportedVersion[2]);
+        currentOperatingSystem!.versions.add(currentVersion!);
+      }
+      currentVersion!.options
+          .add(Option(supportedVersion[3], supportedVersion[4]));
+    });
+
+    return output;
+  }
+
+  Future<Process> start(DownloadDescription description) async {
     var arguments = [
-      operatingSystem.code,
-      version.version,
-      if (option != null) option.option
+      description.operatingSystem.code,
+      description.version.version,
+      if (description.option != null) description.option!.option
     ];
     final process = await Process.start('quickget', arguments);
     return process;

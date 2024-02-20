@@ -1,12 +1,13 @@
 import 'dart:io';
 
+import 'package:desktop_notifications/desktop_notifications.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gettext_i18n/gettext_i18n.dart';
 
 import '../bloc/download_cubit.dart';
 import '../bloc/download_state.dart';
-import '../controllers/notification_controller.dart';
+import '../model/download_description.dart';
 import '../model/operating_system.dart';
 import '../model/option.dart';
 import '../model/version.dart';
@@ -15,49 +16,47 @@ import '../widgets/downloader/download_label.dart';
 import '../widgets/downloader/download_progress_bar.dart';
 
 class Downloader extends StatefulWidget {
-  const Downloader({
-    super.key,
-    required this.operatingSystem,
-    required this.version,
-    this.option,
-  });
+  const Downloader(this.description, {super.key});
 
-  final OperatingSystem operatingSystem;
-  final Version version;
-  final Option? option;
+  final DownloadDescription description;
 
   @override
   State<Downloader> createState() => _DownloaderState();
 }
 
 class _DownloaderState extends State<Downloader> {
-  final notificationController = NotificationController();
+  final notifications = NotificationsClient();
+
+  OperatingSystem get operatingSystem => widget.description.operatingSystem;
+  Version get version => widget.description.version;
+  Option? get option => widget.description.option;
 
   @override
   void initState() {
     super.initState();
     context
         .read<DownloadCubit>()
-        .start(widget.operatingSystem, widget.version, widget.option)
+        .start(widget.description)
         .then((completed) => _showNotification(completed: completed));
   }
 
   _showNotification({required bool completed}) {
-    if (completed) {
-      notificationController.notify(
-        context.t('Download complete'),
-        body: context.t(
-          'Download of {0} has completed.',
-          args: [widget.operatingSystem.name],
-        ),
-      );
-    } else {
-      notificationController.notify(
-        context.t('Download cancelled'),
-        body: context.t('Download of {0} has been canceled.',
-            args: [widget.operatingSystem.name]),
-      );
-    }
+    notifications.notify(
+      completed
+          ? context.t('Download complete')
+          : context.t('Download cancelled'),
+      body: completed
+          ? context.t(
+              'Download of {0} has completed.',
+              args: [operatingSystem.name],
+            )
+          : context.t(
+              'Download of {0} has been canceled.',
+              args: [operatingSystem.name],
+            ),
+      appName: 'Quickgui',
+      expireTimeoutMs: 10000, /* 10 seconds */
+    );
   }
 
   @override
@@ -66,7 +65,7 @@ class _DownloaderState extends State<Downloader> {
       appBar: AppBar(
         title: Text(
           context.t('Downloading {0}', args: [
-            '${widget.operatingSystem.name} ${widget.version.version} ${widget.option?.option ?? ''}'
+            '${operatingSystem.name} ${version.version} ${option?.option ?? ''}'
           ]),
         ),
         automaticallyImplyLeading: false,
@@ -74,16 +73,16 @@ class _DownloaderState extends State<Downloader> {
       body: Column(
         children: [
           Expanded(
-            child: BlocBuilder<DownloadCubit, DownloadState>(
+            child: BlocBuilder<DownloadCubit, DownloaderState>(
               builder: (context, state) {
                 return Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    for (final download in state) ...[
+                    for (final download in state.downloads) ...[
                       DownloadLabel(
                         downloadFinished: download.success,
                         data: download.progress,
-                        downloader: widget.option!.downloader,
+                        downloader: option!.downloader,
                       ),
                       DownloadProgressBar(
                         downloadFinished: download.success,

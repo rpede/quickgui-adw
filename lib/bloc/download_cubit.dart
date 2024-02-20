@@ -1,84 +1,62 @@
+import 'dart:collection';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../infrastructure/download_infrastructure.dart';
-import '../model/operating_system.dart';
-import '../model/option.dart';
-import '../model/version.dart';
+import '../model/download_description.dart';
 import 'download_state.dart';
 
-class DownloadCubit extends Cubit<DownloadState> {
+class DownloadCubit extends Cubit<DownloaderState> {
   final DownloadInfrastructure downloader;
   final _processes = <String, Process>{};
 
-  DownloadCubit(this.downloader) : super([]);
+  DownloadCubit(this.downloader) : super(DownloaderState.empty());
 
-  downloadName(
-    final OperatingSystem operatingSystem,
-    final Version version,
-    final Option? option,
-  ) {
-    return [
-      operatingSystem.code,
-      version.version,
-      if (option != null) option.option
-    ].join('-');
+  Future<void> loadChoices() async {
+    final choices = await downloader.loadChoices();
+    emit(state.copyWith(choices: UnmodifiableListView(choices)));
   }
 
-  Future<bool> start(
-    final OperatingSystem operatingSystem,
-    final Version version,
-    final Option? option,
-  ) async {
-    final name = downloadName(operatingSystem, version, option);
+  Future<bool> start(final DownloadDescription description) async {
+    final name = description.name;
     if (_processes.containsKey(name)) {
       return (await _processes[name]!.exitCode) == 0;
     }
-    emit([...state, Download(name: name)]);
-    final process = await downloader.start(
-      operatingSystem: operatingSystem,
-      version: version,
-      option: option,
-    );
+    emit(state.copyWith(downloads: UnmodifiableListView([...state.downloads, Download(name: name)])));
+    final process = await downloader.start(description);
     _processes[name] = process;
     process.exitCode.then(
       (exitCode) => _updateDownload(
           name, (download) => download.copyWith(exitCode: exitCode)),
     );
-    downloader.progress(process, option).listen(
+    downloader.progress(process, description.option).listen(
           (progress) => _updateDownload(
               name, (download) => download.copyWith(progress: progress)),
         );
     return (await process.exitCode) == 0;
   }
 
-  _updateDownload(String name, Download Function(Download download) update) {
-    final index = state.indexWhere((download) => download.name == name);
-    final newState = [...state];
-    final oldDownload = state[index];
-    newState[index] = update(oldDownload);
-    emit(newState);
+  void stop(DownloadDescription description) => stopByName(description.name);
+
+  void stopByName(String name) {
+    _processes[name]?.kill();
+    // Is this needed?
+    _updateDownload(name, (download) => download.copyWith(exitCode: -1));
   }
 
-  void stop(
-    final OperatingSystem operatingSystem,
-    final Version version,
-    final Option? option,
-  ) =>
-      stopByName(downloadName(operatingSystem, version, option));
-
-  void stopByName(String downloadName) {
-    _processes[downloadName]?.kill();
-    final index = state.indexWhere((d) => d.name == downloadName);
-    final newState = [...state];
-    newState[index] = state[index].copyWith(exitCode: 1);
-    emit(newState);
+  _updateDownload(String name, Download Function(Download download) update) {
+    final index =
+        state.downloads.indexWhere((download) => download.name == name);
+    final newDownloads = [...state.downloads];
+    final oldDownload = state.downloads[index];
+    newDownloads[index] = update(oldDownload);
+    emit(state.copyWith(downloads: UnmodifiableListView(newDownloads)));
   }
 
   @override
-  void onChange(Change<DownloadState> change) {
+  void onChange(Change<DownloaderState> change) {
     if (kDebugMode) print(change);
     super.onChange(change);
   }

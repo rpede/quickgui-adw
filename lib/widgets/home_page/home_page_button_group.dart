@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:gettext_i18n/gettext_i18n.dart';
 import 'package:tuple/tuple.dart';
 
+import '../../model/download_description.dart';
 import '../../model/operating_system.dart';
 import '../../model/option.dart';
 import '../../model/version.dart';
@@ -88,11 +89,11 @@ class _HomePageButtonGroupState extends State<HomePageButtonGroup> {
               : () {
                   Navigator.of(context).push(
                     MaterialPageRoute(
-                      builder: (context) => Downloader(
+                      builder: (context) => Downloader(DownloadDescription(
                         operatingSystem: _selectedOperatingSystem!,
                         version: _selectedVersion!,
                         option: _selectedOption,
-                      ),
+                      )),
                     ),
                   );
                 },
