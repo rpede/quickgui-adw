@@ -10,8 +10,7 @@ import 'package:gettext_i18n/gettext_i18n.dart';
 
 import '../bloc/manager_cubit.dart';
 import '../bloc/manager_state.dart';
-import '../globals.dart';
-import '../mixins/preferences_mixin.dart';
+import '../settings.dart';
 import '../widgets/manager/vm_list_item.dart';
 
 /// VM manager page.
@@ -24,26 +23,13 @@ class Manager extends StatefulWidget {
   State<Manager> createState() => _ManagerState();
 }
 
-class _ManagerState extends State<Manager> with PreferencesMixin {
+class _ManagerState extends State<Manager> {
   Timer? _refreshTimer;
 
   @override
   void initState() {
     super.initState();
-
-    getPreference<String>(prefWorkingDirectory).then((pref) {
-      setState(() {
-        if (pref == null) {
-          return;
-        }
-        Directory.current = pref;
-      });
-      Future.delayed(
-        Duration.zero,
-        () => context.read<ManagerCubit>().refreshVms(),
-      ); // Reload VM list when we enter the page.
-    });
-
+    context.read<ManagerCubit>().refreshVms();
     _refreshTimer = Timer.periodic(const Duration(seconds: 5), (Timer t) {
       context.read<ManagerCubit>().refreshVms();
     }); // Reload VM list every 5 seconds.
@@ -62,8 +48,9 @@ class _ManagerState extends State<Manager> with PreferencesMixin {
       setState(() {
         Directory.current = result;
       });
-
-      savePreference(prefWorkingDirectory, Directory.current.path);
+      if (mounted) {
+        context.read<Settings>().setWorkingDirectory(Directory.current.path);
+      }
       bloc.refreshVms();
     }
   }

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'app.dart';
 import 'bloc/download_cubit.dart';
@@ -11,7 +12,7 @@ import 'bloc/manager_cubit.dart';
 import 'infrastructure/download_infrastructure.dart';
 import 'infrastructure/manager_infrastructure.dart';
 import 'mixins/app_version.dart';
-import 'model/app_settings.dart';
+import 'settings.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -22,22 +23,22 @@ void main() async {
   if (foundQuickGet.exitCode == 0) {
     AppVersion.packageInfo = await PackageInfo.fromPlatform();
   }
+  final settings = Settings(await SharedPreferences.getInstance());
+  if (settings.workingDirectory!= null) {
+    Directory.current = settings.workingDirectory;
+  }
   runApp(
-    MultiProvider(
+    MultiBlocProvider(
       providers: [
-        ChangeNotifierProvider(create: (_) => AppSettings()),
+        ChangeNotifierProvider.value(value: settings),
+        BlocProvider(
+            create: (_) =>
+                ManagerCubit(ManagerInfrastructure())..checkEnvironment()),
+        BlocProvider(
+            create: (_) =>
+                DownloadCubit(DownloadInfrastructure())..loadChoices()),
       ],
-      builder: (context, _) => MultiBlocProvider(
-        providers: [
-          BlocProvider(
-              create: (_) =>
-                  ManagerCubit(ManagerInfrastructure())..checkEnvironment()),
-          BlocProvider(
-              create: (_) =>
-                  DownloadCubit(DownloadInfrastructure())..loadChoices()),
-        ],
-        child: const App(),
-      ),
+      child: const App(),
     ),
   );
 }

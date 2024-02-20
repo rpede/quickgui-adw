@@ -2,44 +2,26 @@ import 'package:flutter/material.dart';
 import 'package:gettext_i18n/gettext_i18n.dart';
 import 'package:provider/provider.dart';
 
-import '../globals.dart';
 import '../mixins/app_version.dart';
-import '../mixins/preferences_mixin.dart';
-import '../model/app_settings.dart';
+import '../settings.dart';
 import '../supported_locales.dart';
 
-class LeftMenu extends StatefulWidget {
+class LeftMenu extends StatelessWidget {
   const LeftMenu({super.key});
 
   @override
-  State<LeftMenu> createState() => _LeftMenuState();
-}
+  Widget build(BuildContext context) {
+    final settings = context.watch<Settings>();
 
-class _LeftMenuState extends State<LeftMenu> with PreferencesMixin {
-  late String currentLocale;
-
-  @override
-  void initState() {
-    super.initState();
-  }
-
-  @override
-  void didChangeDependencies() {
-    var appSettings = context.read<AppSettings>();
-    currentLocale = appSettings.activeLocale;
+    var currentLocale = settings.locale;
     if (!supportedLocales.contains(currentLocale)) {
-      currentLocale = currentLocale.split("_")[0];
+      currentLocale = currentLocale?.split("_")[0];
       if (!supportedLocales.contains(currentLocale)) {
         currentLocale = "en";
       }
     }
-    super.didChangeDependencies();
-  }
-
-  @override
-  Widget build(BuildContext context) {
     var version = AppVersion.packageInfo!.version;
-    return Consumer<AppSettings>(
+    return Consumer<Settings>(
       builder: (context, appSettings, _) {
         return Drawer(
           child: ListView(
@@ -60,8 +42,8 @@ class _LeftMenuState extends State<LeftMenu> with PreferencesMixin {
                     Switch(
                       value: Theme.of(context).brightness == Brightness.dark,
                       onChanged: (value) {
-                        appSettings.useDarkMode = value;
-                        savePreference(prefThemeMode, value);
+                        appSettings.setThemeMode(
+                            value ? ThemeMode.dark : ThemeMode.light);
                       },
                     ),
                   ],
@@ -82,13 +64,8 @@ class _LeftMenuState extends State<LeftMenu> with PreferencesMixin {
                           .map(
                               (e) => DropdownMenuItem(value: e, child: Text(e)))
                           .toList(),
-                      onChanged: (value) {
-                        setState(() {
-                          currentLocale = value!;
-                          appSettings.activeLocale = currentLocale;
-                          savePreference(prefCurrentLocale, currentLocale);
-                        });
-                      },
+                      onChanged: (value) =>
+                          context.read<Settings>().setLocale(value),
                     ),
                   ],
                 ),

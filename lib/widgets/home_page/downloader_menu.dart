@@ -3,10 +3,10 @@ import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gettext_i18n/gettext_i18n.dart';
 
-import '../../globals.dart';
-import '../../mixins/preferences_mixin.dart';
+import '../../settings.dart';
 import 'home_page_button_group.dart';
 
 class DownloaderMenu extends StatefulWidget {
@@ -16,18 +16,7 @@ class DownloaderMenu extends StatefulWidget {
   State<DownloaderMenu> createState() => _DownloaderMenuState();
 }
 
-class _DownloaderMenuState extends State<DownloaderMenu> with PreferencesMixin {
-  @override
-  void initState() {
-    super.initState();
-    getPreference<String>(prefWorkingDirectory).then((pref) {
-      if (pref == null) return;
-      setState(() {
-        Directory.current = pref;
-      });
-    });
-  }
-
+class _DownloaderMenuState extends State<DownloaderMenu> {
   void _onTapPath() async {
     var folder = await FilePicker.platform
         .getDirectoryPath(dialogTitle: "Pick a folder");
@@ -35,7 +24,7 @@ class _DownloaderMenuState extends State<DownloaderMenu> with PreferencesMixin {
       setState(() {
         Directory.current = folder;
       });
-      savePreference(prefWorkingDirectory, Directory.current.path);
+      if (mounted) context.read<Settings>().setWorkingDirectory(folder);
     }
   }
 
