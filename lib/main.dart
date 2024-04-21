@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
+import 'package:quickgui/infrastructure/vm_config_infrastructure.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'app.dart';
@@ -33,7 +34,8 @@ void main() async {
         ChangeNotifierProvider.value(value: settings),
         BlocProvider(
             create: (_) =>
-                ManagerCubit(ManagerInfrastructure())..checkEnvironment()),
+                ManagerCubit(VmConfigInfrastructure(), ManagerInfrastructure())
+                  ..checkEnvironment()),
         BlocProvider(create: (_) => DownloadCubit(DownloadInfrastructure())),
       ],
       child: const App(),

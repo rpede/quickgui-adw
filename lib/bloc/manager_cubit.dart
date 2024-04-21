@@ -1,21 +1,21 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:quickgui/infrastructure/vm_config_infrastructure.dart';
 
 import '../infrastructure/manager_infrastructure.dart';
 import '../model/vminfo.dart';
 import 'manager_state.dart';
 
 class ManagerCubit extends Cubit<ManagerState> {
-  final ManagerInfrastructure controller;
+  ManagerCubit(this.config, this.manager) : super(ManagerState.empty());
 
-  ManagerCubit(this.controller) : super(ManagerState.empty());
+  final ManagerInfrastructure manager;
+  final VmConfigInfrastructure config;
 
   get path => null;
 
   checkEnvironment() {
-    controller
-        .detectSpice()
-        .then((spice) => emit(state.copyWith(spice: spice)));
-    controller.getTerminalEmulator().then((terminalEmulator) =>
+    manager.detectSpice().then((spice) => emit(state.copyWith(spice: spice)));
+    manager.getTerminalEmulator().then((terminalEmulator) =>
         emit(state.copyWith(terminalEmulator: terminalEmulator)));
   }
 
@@ -23,13 +23,13 @@ class ManagerCubit extends Cubit<ManagerState> {
     List<String> currentVms = [];
     Map<String, VmInfo> activeVms = {};
 
-    await for (final vm in controller.getVms()) {
+    await for (final vm in config.getVms()) {
       currentVms.add(vm.name);
       if (vm.active) {
         if (state.activeVms.containsKey(vm.name)) {
           activeVms[vm.name] = state.activeVms[vm.name]!;
         } else {
-          activeVms[vm.name] = controller.parseVmInfo(vm.name);
+          activeVms[vm.name] = config.parseVmInfo(vm.name);
         }
       }
     }
@@ -53,7 +53,8 @@ class ManagerCubit extends Cubit<ManagerState> {
   }
 
   startVm(String name) async {
-    final info = await controller.runVm(name);
+    await manager.runVm(name);
+    final info = config.parseVmInfo(name);
     emit(state.copyWith(
       currentVms: [name, ...state.currentVms],
       activeVms: {name: info}..addAll(state.activeVms),
@@ -61,7 +62,7 @@ class ManagerCubit extends Cubit<ManagerState> {
   }
 
   stopVm(String name) async {
-    final exitCode = await controller.killVm(name);
+    final exitCode = await manager.killVm(name);
     if (exitCode == 0) {
       emit(state.copyWith(
         currentVms: [...state.currentVms]..remove(name),
@@ -71,7 +72,7 @@ class ManagerCubit extends Cubit<ManagerState> {
   }
 
   deleteVm(String name, String option) async {
-    final exitCode = await controller.deleteVm(name, option);
+    final exitCode = await manager.deleteVm(name, option);
     if (exitCode == 0) {
       emit(state.copyWith(
         currentVms: [...state.currentVms]..remove(name),
@@ -82,11 +83,11 @@ class ManagerCubit extends Cubit<ManagerState> {
 
   void connectSpice(VmInfo vmInfo) {
     assert(vmInfo.spicePort != null);
-    controller.connectSpice(vmInfo.spicePort!);
+    manager.connectSpice(vmInfo.spicePort!);
   }
 
   void connectSsh(VmInfo vmInfo, String username) {
     assert(vmInfo.sshPort != null);
-    controller.connectSsh(vmInfo.spicePort!, username);
+    manager.connectSsh(vmInfo.spicePort!, username);
   }
 }

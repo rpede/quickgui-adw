@@ -1,22 +1,23 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:quickgui/infrastructure/quickget_cli.dart';
-import 'package:quickgui/infrastructure/quickget_parser.dart';
-
+import '../cli/commands.dart';
+import '../cli/quickget_parser.dart';
 import '../model/download_description.dart';
 import '../model/operating_system.dart';
 import '../model/option.dart';
 
 class DownloadInfrastructure {
-  DownloadInfrastructure({QuickGetCli? cli, QuickGetParser? parser})
-      : cli = cli ?? QuickGetCli(),
+  DownloadInfrastructure({Commands? commands, QuickGetParser? parser})
+      : commands = commands ?? Commands(),
         parser = parser ?? QuickGetParser();
-  final QuickGetCli cli;
+
+  final Commands commands;
   final QuickGetParser parser;
 
   Stream<OperatingSystem> loadChoices() async* {
-    await for (final os in parser.parseListCsv(await cli.listCsv())) {
+    final process = await commands.quickGetListCsv();
+    await for (final os in parser.parseListCsv(process)) {
       yield os;
     }
   }
@@ -27,7 +28,7 @@ class DownloadInfrastructure {
       description.version.version,
       if (description.option != null) description.option!.option
     ];
-    return cli.download(arguments);
+    return commands.quickGet(arguments);
   }
 
   Stream<double> progress(Process process, Option? option) {

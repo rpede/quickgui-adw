@@ -1,7 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:quickgui/infrastructure/quickget_parser.dart';
+import 'package:quickgui/cli/quickget_parser.dart';
 
 void main() {
   group("QuickGetParser", () {
