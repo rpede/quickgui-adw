@@ -27,10 +27,11 @@ web/
 ios/
 android/
 windows/
-list.csv
 *.xz
 *.iso
 *.conf
 *.mo
 RELEASING.md
 BUILDING.md
+
+VirtualMachines

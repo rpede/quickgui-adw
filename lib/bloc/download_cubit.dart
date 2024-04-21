@@ -14,9 +14,11 @@ class DownloadCubit extends Cubit<DownloaderState> {
 
   DownloadCubit(this.downloader) : super(DownloaderState.empty());
 
-  Future<void> loadChoices() async {
-    final choices = await downloader.loadChoices();
-    emit(state.copyWith(choices: UnmodifiableListView(choices)));
+  Future<void> loadChoices() {
+    return downloader.loadChoices().forEach((element) {
+      emit(state.copyWith(
+          choices: UnmodifiableListView([...state.choices, element])));
+    });
   }
 
   Future<bool> start(final DownloadDescription description) async {
@@ -24,7 +26,9 @@ class DownloadCubit extends Cubit<DownloaderState> {
     if (_processes.containsKey(name)) {
       return (await _processes[name]!.exitCode) == 0;
     }
-    emit(state.copyWith(downloads: UnmodifiableListView([...state.downloads, Download(name: name)])));
+    emit(state.copyWith(
+        downloads:
+            UnmodifiableListView([...state.downloads, Download(name: name)])));
     final process = await downloader.start(description);
     _processes[name] = process;
     process.exitCode.then(

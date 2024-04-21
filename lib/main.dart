@@ -24,7 +24,7 @@ void main() async {
     AppVersion.packageInfo = await PackageInfo.fromPlatform();
   }
   final settings = Settings(await SharedPreferences.getInstance());
-  if (settings.workingDirectory!= null) {
+  if (settings.workingDirectory != null) {
     Directory.current = settings.workingDirectory;
   }
   runApp(
@@ -34,9 +34,7 @@ void main() async {
         BlocProvider(
             create: (_) =>
                 ManagerCubit(ManagerInfrastructure())..checkEnvironment()),
-        BlocProvider(
-            create: (_) =>
-                DownloadCubit(DownloadInfrastructure())..loadChoices()),
+        BlocProvider(create: (_) => DownloadCubit(DownloadInfrastructure())),
       ],
       child: const App(),
     ),
