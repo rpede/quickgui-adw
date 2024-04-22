@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
-import 'package:quickgui/infrastructure/vm_config_infrastructure.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'app.dart';
@@ -12,6 +11,7 @@ import 'bloc/download_cubit.dart';
 import 'bloc/manager_cubit.dart';
 import 'infrastructure/download_infrastructure.dart';
 import 'infrastructure/manager_infrastructure.dart';
+import 'infrastructure/vm_config_infrastructure.dart';
 import 'mixins/app_version.dart';
 import 'settings.dart';
 

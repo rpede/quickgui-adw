@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:gettext_i18n/gettext_i18n.dart';
 import 'package:provider/provider.dart';
-import 'package:quickgui/bloc/download_cubit.dart';
 
+import '../bloc/download_cubit.dart';
 import '../widgets/home_page/downloader_menu.dart';
 import '../widgets/home_page/logo.dart';
 

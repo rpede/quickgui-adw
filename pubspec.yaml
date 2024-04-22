@@ -1,42 +1,35 @@
-name: quickgui
-description: A new Flutter project.
+name: quickgui_adw
+description: "A new Flutter project."
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
-version: 1.2.8-1
+version: 1.0.0+1
 
 environment:
-  sdk: '>=3.2.6 <4.0.0'
+  sdk: '>=3.3.4 <4.0.0'
 
 dependencies:
   flutter:
     sdk: flutter
-  cupertino_icons: ^1.0.2
-  window_size: 
-    git:
-      url: https://github.com/google/flutter-desktop-embedding.git
-      path: plugins/window_size
-      ref: 03d957e8b5c99fc83cd4a781031b154ab3de8753
-  tuple: ^2.0.0
-  file_picker: ^6.1.1
-  shared_preferences: ^2.0.8
-  package_info_plus: ^5.0.1
-  provider: ^6.0.1
-  intl: ^0.18.0
-  gettext: ^1.2.0
-  gettext_parser: ^0.2.0
+  cupertino_icons: ^1.0.6
+  file_picker: ^8.0.2
+  shared_preferences: ^2.2.3
+  provider: ^6.1.2
+  desktop_notifications: ^0.6.3
+  flutter_svg: ^2.0.10+1
+  url_launcher: ^6.2.6
   flutter_localizations: 
     sdk: flutter
-  desktop_notifications: ^0.6.1
-  flutter_svg: ^2.0.9
-  gettext_i18n: ^1.0.2
-  url_launcher: ^6.1.6
-  path: ^1.9.0
-  flutter_bloc: ^8.1.4
+  intl: ^0.18.1
+  gettext: ^1.2.0
+  gettext_parser: ^0.2.0
+  gettext_i18n: ^1.0.5
+  flutter_bloc: ^8.1.5
   equatable: ^2.0.5
+  package_info_plus: ^8.0.0
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^3.0.1
+  flutter_lints: ^3.0.0
 
 flutter:
   uses-material-design: true

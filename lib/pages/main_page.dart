@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:gettext_i18n/gettext_i18n.dart';
-import 'package:window_size/window_size.dart';
 
 import '../widgets/home_page/logo.dart';
 import '../widgets/home_page/main_menu.dart';
@@ -17,8 +16,9 @@ class _MainPageState extends State<MainPage> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    setWindowTitle(
-        context.t('Quickgui : a Flutter frontend for Quickget and Quickemu'));
+    // TODO fix title
+    // setWindowTitle(
+    //     context.t('Quickgui : a Flutter frontend for Quickget and Quickemu'));
   }
 
   @override

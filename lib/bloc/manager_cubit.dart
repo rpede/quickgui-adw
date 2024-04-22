@@ -1,7 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:quickgui/infrastructure/vm_config_infrastructure.dart';
 
 import '../infrastructure/manager_infrastructure.dart';
+import '../infrastructure/vm_config_infrastructure.dart';
 import '../model/vminfo.dart';
 import 'manager_state.dart';
 
