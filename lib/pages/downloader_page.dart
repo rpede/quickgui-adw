@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:gettext_i18n/gettext_i18n.dart';
+import 'package:libadwaita/libadwaita.dart';
+import 'package:libadwaita_core/libadwaita_core.dart';
+import 'package:libadwaita_window_manager/libadwaita_window_manager.dart';
 import 'package:provider/provider.dart';
 
 import '../bloc/download_cubit.dart';
@@ -22,10 +25,10 @@ class _DownloaderPageState extends State<DownloaderPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(context.t('Downloader')),
-      ),
+    return AdwScaffold(
+      actions: AdwActions().windowManager,
+      start: [BackButton()],
+      title: Text(context.t('Downloader')),
       body: const Column(
         children: [
           Logo(),

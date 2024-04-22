@@ -4,6 +4,8 @@ import 'package:desktop_notifications/desktop_notifications.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gettext_i18n/gettext_i18n.dart';
+import 'package:libadwaita/libadwaita.dart';
+import 'package:libadwaita_window_manager/libadwaita_window_manager.dart';
 
 import '../bloc/download_cubit.dart';
 import '../bloc/download_state.dart';
@@ -61,14 +63,13 @@ class _DownloaderState extends State<Downloader> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          context.t('Downloading {0}', args: [
-            '${operatingSystem.name} ${version.version} ${option?.option ?? ''}'
-          ]),
-        ),
-        automaticallyImplyLeading: false,
+    return AdwScaffold(
+      actions: AdwActions().windowManager,
+      start: [BackButton()],
+      title: Text(
+        context.t('Downloading {0}', args: [
+          '${operatingSystem.name} ${version.version} ${option?.option ?? ''}'
+        ]),
       ),
       body: Column(
         children: [

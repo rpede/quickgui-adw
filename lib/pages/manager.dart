@@ -7,6 +7,8 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gettext_i18n/gettext_i18n.dart';
+import 'package:libadwaita/libadwaita.dart';
+import 'package:libadwaita_window_manager/libadwaita_window_manager.dart';
 
 import '../bloc/manager_cubit.dart';
 import '../bloc/manager_state.dart';
@@ -81,10 +83,10 @@ class _ManagerState extends State<Manager> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(context.t('Manager')),
-      ),
+    return AdwScaffold(
+      actions: AdwActions().windowManager,
+      start: [BackButton()],
+      title: Text(context.t('Manager')),
       body: BlocBuilder<ManagerCubit, ManagerState>(builder: (context, state) {
         final activeVms = state.activeVms;
         final currentVms = state.currentVms;

@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gettext_i18n/gettext_i18n.dart';
+import 'package:libadwaita/libadwaita.dart';
+import 'package:libadwaita_searchbar/libadwaita_searchbar.dart';
+import 'package:libadwaita_window_manager/libadwaita_window_manager.dart';
 
 import '../bloc/download_cubit.dart';
 import '../bloc/download_state.dart';
@@ -16,54 +19,28 @@ class OperatingSystemSelection extends StatefulWidget {
 
 class _OperatingSystemSelectionState extends State<OperatingSystemSelection> {
   var term = "";
-  final focusNode = FocusNode();
 
   @override
   void initState() {
-    focusNode.requestFocus();
     super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(context.t('Select operating system')),
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(kToolbarHeight),
-          child: Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Container(
-              decoration: BoxDecoration(
-                color: Theme.of(context).canvasColor,
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(8),
-                child: Material(
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: <Widget>[
-                      const Icon(Icons.search),
-                      Expanded(
-                        child: TextField(
-                          focusNode: focusNode,
-                          decoration: InputDecoration.collapsed(
-                              hintText: context.t('Search operating system')),
-                          onChanged: (value) {
-                            setState(() {
-                              term = value;
-                            });
-                          },
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ),
+    return AdwScaffold(
+      actions: AdwActions().windowManager,
+      title: Text(context.t('Select operating system')),
+      start: [BackButton()],
+      end: [
+        AdwSearchBar(
+          hintText: context.t('Search operating system'),
+          onChanged: (value) {
+            setState(() {
+              term = value;
+            });
+          },
         ),
-      ),
+      ],
       body: BlocBuilder<DownloadCubit, DownloaderState>(
         builder: (context, state) {
           var list = state.choices

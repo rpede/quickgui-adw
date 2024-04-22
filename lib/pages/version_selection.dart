@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:gettext_i18n/gettext_i18n.dart';
+import 'package:libadwaita/libadwaita.dart';
+import 'package:libadwaita_searchbar/libadwaita_searchbar.dart';
+import 'package:libadwaita_window_manager/libadwaita_window_manager.dart';
 
 import '../model/operating_system.dart';
 import '../model/option.dart';
@@ -16,13 +19,6 @@ class VersionSelection extends StatefulWidget {
 
 class _VersionSelectionState extends State<VersionSelection> {
   var term = "";
-  final focusNode = FocusNode();
-
-  @override
-  void initState() {
-    focusNode.requestFocus();
-    super.initState();
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -31,80 +27,48 @@ class _VersionSelectionState extends State<VersionSelection> {
             version.version.toLowerCase().contains(term.toLowerCase()))
         .toList();
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(context
-            .t('Select version for {0}', args: [widget.operatingSystem.name])),
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(kToolbarHeight),
-          child: Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Container(
-              decoration: BoxDecoration(
-                color: Theme.of(context).canvasColor,
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(8),
-                child: Material(
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: <Widget>[
-                      const Icon(Icons.search),
-                      Expanded(
-                        child: TextField(
-                          focusNode: focusNode,
-                          decoration: InputDecoration.collapsed(
-                            hintText: context.t('Search version'),
-                          ),
-                          onChanged: (value) {
-                            setState(() {
-                              term = value;
-                            });
-                          },
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ),
+    return AdwScaffold(
+      actions: AdwActions().windowManager,
+      title: Text(context
+          .t('Select version for {0}', args: [widget.operatingSystem.name])),
+      start: [BackButton()],
+      end: [
+        AdwSearchBar(
+          hintText: context.t('Search version'),
+          onChanged: (value) {
+            setState(() {
+              term = value;
+            });
+          },
         ),
-      ),
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            ListView.builder(
-              padding: const EdgeInsets.only(top: 4),
-              shrinkWrap: true,
-              itemCount: list.length,
-              itemBuilder: (context, index) {
-                var item = list[index];
-                return Card(
-                  child: ListTile(
-                    title: Text(item.version),
-                    onTap: () {
-                      if (item.options.length > 1) {
-                        Navigator.of(context)
-                            .push<Option>(MaterialPageRoute(
-                                fullscreenDialog: true,
-                                builder: (context) =>
-                                    OptionSelection(list[index])))
-                            .then((selection) {
-                          if (selection != null) {
-                            Navigator.of(context).pop((item, selection));
-                          }
-                        });
-                      } else {
-                        Navigator.of(context).pop((item, list[index].options[0]));
-                      }
-                    },
-                  ),
-                );
+      ],
+      body: ListView.builder(
+        padding: const EdgeInsets.only(top: 4),
+        shrinkWrap: true,
+        itemCount: list.length,
+        itemBuilder: (context, index) {
+          var item = list[index];
+          return Card(
+            child: ListTile(
+              title: Text(item.version),
+              onTap: () {
+                if (item.options.length > 1) {
+                  Navigator.of(context)
+                      .push<Option>(MaterialPageRoute(
+                          fullscreenDialog: true,
+                          builder: (context) => OptionSelection(list[index])))
+                      .then((selection) {
+                    if (selection != null) {
+                      Navigator.of(context).pop((item, selection));
+                    }
+                  });
+                } else {
+                  Navigator.of(context).pop((item, list[index].options[0]));
+                }
               },
             ),
-          ],
-        ),
+          );
+        },
       ),
     );
   }

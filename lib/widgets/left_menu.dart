@@ -23,55 +23,53 @@ class LeftMenu extends StatelessWidget {
     var version = AppVersion.packageInfo!.version;
     return Consumer<Settings>(
       builder: (context, appSettings, _) {
-        return Drawer(
-          child: ListView(
-            children: [
-              ListTile(
-                title: Text("quickgui $version",
-                    style: Theme.of(context).textTheme.titleLarge),
+        return Column(
+          children: [
+            ListTile(
+              title: Text("quickgui $version",
+                  style: Theme.of(context).textTheme.titleLarge),
+            ),
+            const Divider(),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Row(
+                children: [
+                  Text(context.t('Use dark mode')),
+                  Expanded(
+                    child: Container(),
+                  ),
+                  Switch(
+                    value: Theme.of(context).brightness == Brightness.dark,
+                    onChanged: (value) {
+                      appSettings.setThemeMode(
+                          value ? ThemeMode.dark : ThemeMode.light);
+                    },
+                  ),
+                ],
               ),
-              const Divider(),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Row(
-                  children: [
-                    Text(context.t('Use dark mode')),
-                    Expanded(
-                      child: Container(),
-                    ),
-                    Switch(
-                      value: Theme.of(context).brightness == Brightness.dark,
-                      onChanged: (value) {
-                        appSettings.setThemeMode(
-                            value ? ThemeMode.dark : ThemeMode.light);
-                      },
-                    ),
-                  ],
-                ),
+            ),
+            const Divider(),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Row(
+                children: [
+                  Text(context.t('Language')),
+                  Expanded(
+                    child: Container(),
+                  ),
+                  DropdownButton<String>(
+                    value: currentLocale,
+                    items: supportedLocales
+                        .map(
+                            (e) => DropdownMenuItem(value: e, child: Text(e)))
+                        .toList(),
+                    onChanged: (value) =>
+                        context.read<Settings>().setLocale(value),
+                  ),
+                ],
               ),
-              const Divider(),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Row(
-                  children: [
-                    Text(context.t('Language')),
-                    Expanded(
-                      child: Container(),
-                    ),
-                    DropdownButton<String>(
-                      value: currentLocale,
-                      items: supportedLocales
-                          .map(
-                              (e) => DropdownMenuItem(value: e, child: Text(e)))
-                          .toList(),
-                      onChanged: (value) =>
-                          context.read<Settings>().setLocale(value),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
+            ),
+          ],
         );
       },
     );

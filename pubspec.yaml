@@ -24,7 +24,11 @@ dependencies:
   gettext_i18n: ^1.0.5
   flutter_bloc: ^8.1.5
   equatable: ^2.0.5
-  package_info_plus: ^8.0.0
+  libadwaita: ^2.0.2
+  adwaita: ^1.1.0
+  libadwaita_window_manager: ^0.5.4+1
+  window_manager: ^0.3.8
+  libadwaita_searchbar: ^0.5.7
 
 dev_dependencies:
   flutter_test:

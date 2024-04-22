@@ -1,5 +1,7 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:libadwaita/libadwaita.dart';
+import 'package:libadwaita_window_manager/libadwaita_window_manager.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class DebgetNotFoundPage extends StatelessWidget {
@@ -7,7 +9,9 @@ class DebgetNotFoundPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return AdwScaffold(
+      actions: AdwActions().windowManager,
+      start: [BackButton()],
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,

@@ -1,7 +1,9 @@
+import 'package:adwaita/adwaita.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:gettext_i18n/gettext_i18n.dart';
 import 'package:provider/provider.dart';
+import 'package:window_manager/window_manager.dart';
 
 import 'mixins/app_version.dart';
 import 'pages/deget_not_found_page.dart';
@@ -47,9 +49,17 @@ class _AppState extends State<App> {
             : null;
 
     return MaterialApp(
-      theme: ThemeData(primarySwatch: Colors.pink),
-      darkTheme: ThemeData.dark(),
+      builder: (context, child) {
+        final virtualWindowFrame = VirtualWindowFrameInit();
+
+        return virtualWindowFrame(context, child);
+      },
+      theme: AdwaitaThemeData.light(),
+      darkTheme: AdwaitaThemeData.dark(),
+      // theme: ThemeData(primarySwatch: Colors.pink),
+      // darkTheme: ThemeData.dark(),
       themeMode: settings.themeMode,
+      debugShowCheckedModeBanner: false,
       home: AppVersion.packageInfo == null
           ? const DebgetNotFoundPage()
           : const MainPage(),
