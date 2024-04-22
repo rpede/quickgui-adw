@@ -2,7 +2,6 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:gettext_i18n/gettext_i18n.dart';
-import 'package:tuple/tuple.dart';
 
 import '../../model/download_description.dart';
 import '../../model/operating_system.dart';
@@ -65,7 +64,7 @@ class _HomePageButtonGroupState extends State<HomePageButtonGroup> {
           onPressed: (_selectedOperatingSystem != null)
               ? () {
                   Navigator.of(context)
-                      .push<Tuple2<Version, Option?>>(MaterialPageRoute(
+                      .push<(Version, Option?)>(MaterialPageRoute(
                     fullscreenDialog: true,
                     builder: (context) => VersionSelection(
                         operatingSystem: _selectedOperatingSystem!),
@@ -73,8 +72,8 @@ class _HomePageButtonGroupState extends State<HomePageButtonGroup> {
                       .then((selection) {
                     if (selection != null) {
                       setState(() {
-                        _selectedVersion = selection.item1;
-                        _selectedOption = selection.item2;
+                        _selectedVersion = selection.$1;
+                        _selectedOption = selection.$2;
                       });
                     }
                   });

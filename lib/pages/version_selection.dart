@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:gettext_i18n/gettext_i18n.dart';
-import 'package:tuple/tuple.dart';
 
 import '../model/operating_system.dart';
 import '../model/option.dart';
-import '../model/version.dart';
 import 'option_selection.dart';
 
 class VersionSelection extends StatefulWidget {
@@ -94,13 +92,11 @@ class _VersionSelectionState extends State<VersionSelection> {
                                     OptionSelection(list[index])))
                             .then((selection) {
                           if (selection != null) {
-                            Navigator.of(context)
-                                .pop(Tuple2<Version, Option?>(item, selection));
+                            Navigator.of(context).pop((item, selection));
                           }
                         });
                       } else {
-                        Navigator.of(context).pop(Tuple2<Version, Option?>(
-                            item, list[index].options[0]));
+                        Navigator.of(context).pop((item, list[index].options[0]));
                       }
                     },
                   ),
