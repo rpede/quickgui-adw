@@ -13,6 +13,7 @@ import 'package:libadwaita_window_manager/libadwaita_window_manager.dart';
 import '../bloc/manager_cubit.dart';
 import '../bloc/manager_state.dart';
 import '../settings.dart';
+import '../widgets/adw_back_button.dart';
 import '../widgets/manager/vm_list_item.dart';
 
 /// VM manager page.
@@ -85,7 +86,7 @@ class _ManagerState extends State<Manager> {
   Widget build(BuildContext context) {
     return AdwScaffold(
       actions: AdwActions().windowManager,
-      start: [BackButton()],
+      start: [AdwBackButton()],
       title: Text(context.t('Manager')),
       body: BlocBuilder<ManagerCubit, ManagerState>(builder: (context, state) {
         final activeVms = state.activeVms;

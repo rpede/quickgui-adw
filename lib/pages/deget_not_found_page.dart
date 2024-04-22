@@ -4,6 +4,8 @@ import 'package:libadwaita/libadwaita.dart';
 import 'package:libadwaita_window_manager/libadwaita_window_manager.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../widgets/adw_back_button.dart';
+
 class DebgetNotFoundPage extends StatelessWidget {
   const DebgetNotFoundPage({super.key});
 
@@ -11,7 +13,7 @@ class DebgetNotFoundPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return AdwScaffold(
       actions: AdwActions().windowManager,
-      start: [BackButton()],
+      start: [AdwBackButton()],
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,

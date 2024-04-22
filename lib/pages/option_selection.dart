@@ -5,6 +5,7 @@ import 'package:libadwaita_searchbar/libadwaita_searchbar.dart';
 import 'package:libadwaita_window_manager/libadwaita_window_manager.dart';
 
 import '../model/version.dart';
+import '../widgets/adw_back_button.dart';
 
 class OptionSelection extends StatefulWidget {
   const OptionSelection(this.version, {super.key});
@@ -34,7 +35,7 @@ class _OptionSelectionState extends State<OptionSelection> {
     return AdwScaffold(
       actions: AdwActions().windowManager,
       title: Text(context.t('Select option')),
-      start: [BackButton()],
+      start: [AdwBackButton()],
       end: [
         AdwSearchBar(
           hintText: context.t('Search option'),

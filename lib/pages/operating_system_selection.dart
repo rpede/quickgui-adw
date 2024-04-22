@@ -7,6 +7,7 @@ import 'package:libadwaita_window_manager/libadwaita_window_manager.dart';
 
 import '../bloc/download_cubit.dart';
 import '../bloc/download_state.dart';
+import '../widgets/adw_back_button.dart';
 import '../widgets/downloader/operating_system_icon.dart';
 
 class OperatingSystemSelection extends StatefulWidget {
@@ -30,7 +31,7 @@ class _OperatingSystemSelectionState extends State<OperatingSystemSelection> {
     return AdwScaffold(
       actions: AdwActions().windowManager,
       title: Text(context.t('Select operating system')),
-      start: [BackButton()],
+      start: [AdwBackButton()],
       end: [
         AdwSearchBar(
           hintText: context.t('Search operating system'),

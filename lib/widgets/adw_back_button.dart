@@ -1,9 +1,8 @@
-
 import 'package:flutter/material.dart';
 import 'package:libadwaita/libadwaita.dart';
 
-class BackButton extends StatelessWidget {
-  const BackButton({
+class AdwBackButton extends StatelessWidget {
+  const AdwBackButton({
     super.key,
   });
 
@@ -11,8 +10,7 @@ class BackButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return AdwHeaderButton(
       icon: const Icon(Icons.navigate_before),
-      isActive: Navigator.of(context).canPop(),
-      onPressed: () => Navigator.of(context).pop(),
+      onPressed: () => Navigator.of(context).maybePop(),
     );
   }
 }

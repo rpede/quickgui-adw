@@ -6,6 +6,7 @@ import 'package:libadwaita_window_manager/libadwaita_window_manager.dart';
 
 import '../model/operating_system.dart';
 import '../model/option.dart';
+import '../widgets/adw_back_button.dart';
 import 'option_selection.dart';
 
 class VersionSelection extends StatefulWidget {
@@ -31,7 +32,7 @@ class _VersionSelectionState extends State<VersionSelection> {
       actions: AdwActions().windowManager,
       title: Text(context
           .t('Select version for {0}', args: [widget.operatingSystem.name])),
-      start: [BackButton()],
+      start: [AdwBackButton()],
       end: [
         AdwSearchBar(
           hintText: context.t('Search version'),

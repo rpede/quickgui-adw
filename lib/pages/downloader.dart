@@ -6,6 +6,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gettext_i18n/gettext_i18n.dart';
 import 'package:libadwaita/libadwaita.dart';
 import 'package:libadwaita_window_manager/libadwaita_window_manager.dart';
+import 'package:quickgui_adw/widgets/adw_back_button.dart';
 
 import '../bloc/download_cubit.dart';
 import '../bloc/download_state.dart';
@@ -65,7 +66,7 @@ class _DownloaderState extends State<Downloader> {
   Widget build(BuildContext context) {
     return AdwScaffold(
       actions: AdwActions().windowManager,
-      start: [BackButton()],
+      start: [AdwBackButton()],
       title: Text(
         context.t('Downloading {0}', args: [
           '${operatingSystem.name} ${version.version} ${option?.option ?? ''}'
