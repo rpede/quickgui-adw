@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gettext_i18n/gettext_i18n.dart';
 
-import '../../settings.dart';
+import '../../../settings.dart';
 import 'home_page_button_group.dart';
 
 class DownloaderMenu extends StatefulWidget {

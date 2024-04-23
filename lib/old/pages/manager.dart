@@ -10,9 +10,9 @@ import 'package:gettext_i18n/gettext_i18n.dart';
 import 'package:libadwaita/libadwaita.dart';
 import 'package:libadwaita_window_manager/libadwaita_window_manager.dart';
 
-import '../bloc/manager_cubit.dart';
-import '../bloc/manager_state.dart';
-import '../settings.dart';
+import '../../bloc/manager_cubit.dart';
+import '../../bloc/manager_state.dart';
+import '../../settings.dart';
 import '../widgets/adw_back_button.dart';
 import '../widgets/manager/vm_list_item.dart';
 

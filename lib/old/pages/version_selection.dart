@@ -4,8 +4,8 @@ import 'package:libadwaita/libadwaita.dart';
 import 'package:libadwaita_searchbar/libadwaita_searchbar.dart';
 import 'package:libadwaita_window_manager/libadwaita_window_manager.dart';
 
-import '../model/operating_system.dart';
-import '../model/option.dart';
+import '../../model/operating_system.dart';
+import '../../model/option.dart';
 import '../widgets/adw_back_button.dart';
 import 'option_selection.dart';
 

@@ -3,10 +3,10 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:gettext_i18n/gettext_i18n.dart';
 
-import '../../model/download_description.dart';
-import '../../model/operating_system.dart';
-import '../../model/option.dart';
-import '../../model/version.dart';
+import '../../../model/download_description.dart';
+import '../../../model/operating_system.dart';
+import '../../../model/option.dart';
+import '../../../model/version.dart';
 import '../../pages/downloader.dart';
 import '../../pages/operating_system_selection.dart';
 import '../../pages/version_selection.dart';

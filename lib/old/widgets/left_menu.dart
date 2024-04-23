@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:gettext_i18n/gettext_i18n.dart';
 import 'package:provider/provider.dart';
 
-import '../mixins/app_version.dart';
-import '../settings.dart';
-import '../supported_locales.dart';
+import '../../mixins/app_version.dart';
+import '../../settings.dart';
+import '../../supported_locales.dart';
 
 class LeftMenu extends StatelessWidget {
   const LeftMenu({super.key});

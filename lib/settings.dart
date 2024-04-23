@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -11,6 +12,14 @@ class Settings extends ChangeNotifier {
   final SharedPreferences _storage;
 
   Settings(this._storage);
+
+  static Future<Settings> create() async {
+    final settings = Settings(await SharedPreferences.getInstance());
+    if (settings.workingDirectory != null) {
+      Directory.current = settings.workingDirectory;
+    }
+    return settings;
+  }
 
   String? get workingDirectory => _storage.getString(_kWorkingDirectory);
 

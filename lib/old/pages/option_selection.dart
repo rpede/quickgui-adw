@@ -4,7 +4,7 @@ import 'package:libadwaita/libadwaita.dart';
 import 'package:libadwaita_searchbar/libadwaita_searchbar.dart';
 import 'package:libadwaita_window_manager/libadwaita_window_manager.dart';
 
-import '../model/version.dart';
+import '../../model/version.dart';
 import '../widgets/adw_back_button.dart';
 
 class OptionSelection extends StatefulWidget {

@@ -5,8 +5,8 @@ import 'package:libadwaita/libadwaita.dart';
 import 'package:libadwaita_searchbar/libadwaita_searchbar.dart';
 import 'package:libadwaita_window_manager/libadwaita_window_manager.dart';
 
-import '../bloc/download_cubit.dart';
-import '../bloc/download_state.dart';
+import '../../bloc/download_cubit.dart';
+import '../../bloc/download_state.dart';
 import '../widgets/adw_back_button.dart';
 import '../widgets/downloader/operating_system_icon.dart';
 

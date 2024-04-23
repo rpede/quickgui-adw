@@ -4,9 +4,9 @@ import 'package:libadwaita/libadwaita.dart';
 import 'package:libadwaita_core/libadwaita_core.dart';
 import 'package:libadwaita_window_manager/libadwaita_window_manager.dart';
 import 'package:provider/provider.dart';
-import 'package:quickgui_adw/widgets/adw_back_button.dart';
+import 'package:quickgui_adw/old/widgets/adw_back_button.dart';
 
-import '../bloc/download_cubit.dart';
+import '../../bloc/download_cubit.dart';
 import '../widgets/home_page/downloader_menu.dart';
 import '../widgets/home_page/logo.dart';
 

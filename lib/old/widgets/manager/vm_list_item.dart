@@ -3,8 +3,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:gettext_i18n/gettext_i18n.dart';
 
-import '../../bloc/manager_cubit.dart';
-import '../../model/vminfo.dart';
+import '../../../bloc/manager_cubit.dart';
+import '../../../model/vminfo.dart';
 import 'dialogs.dart';
 
 class VmListTile extends StatelessWidget {
