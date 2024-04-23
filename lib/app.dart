@@ -3,10 +3,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:libadwaita/libadwaita.dart';
 import 'package:libadwaita_window_manager/libadwaita_window_manager.dart';
-import 'package:quickgui_adw/old/widgets/left_menu.dart';
+import 'package:quickgui_adw/widgets/vm_list.dart';
 import 'package:window_manager/window_manager.dart';
 
+import 'bloc/manager_cubit.dart';
+import 'bloc/manager_state.dart';
 import 'settings.dart';
+import 'widgets/missing_quickemu.dart';
+import 'widgets/no_vms.dart';
 import 'widgets/settings_menu.dart';
 
 class App extends StatelessWidget {
@@ -23,26 +27,19 @@ class App extends StatelessWidget {
       },
       theme: AdwaitaThemeData.light(),
       darkTheme: AdwaitaThemeData.dark(),
-      // theme: ThemeData(primarySwatch: Colors.pink),
-      // darkTheme: ThemeData.dark(),
       themeMode: settings.themeMode,
       debugShowCheckedModeBanner: false,
       home: AdwScaffold(
         actions: AdwActions().windowManager,
-        title: Text("Quickui Adw"),
-        end: [GtkPopupMenu(body: SettingsMenu())],
-        body: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Image.asset('assets/images/logo_pink.png', width: 100, height: 100),
-              const Padding(
-                padding: EdgeInsets.all(8.0),
-                child: Text("Click ➕ to add a virtual machine."),
-              ),
-            ],
-          ),
-        ),
+        title: const Text("Quickui Adw"),
+        end: const [GtkPopupMenu(body: SettingsMenu())],
+        body:
+            BlocBuilder<ManagerCubit, ManagerState>(builder: (context, state) {
+          if (!state.quickemu) return const MissingQuickemu();
+          if (state.currentVms.isEmpty) return const NoVms();
+          return VmList(
+              currentVms: state.currentVms, activeVms: state.activeVms);
+        }),
       ),
     );
   }

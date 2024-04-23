@@ -4,7 +4,6 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:window_manager/window_manager.dart';
 
 import 'app.dart';
@@ -47,7 +46,7 @@ void main() async {
         BlocProvider(
             create: (_) =>
                 ManagerCubit(VmConfigInfrastructure(), ManagerInfrastructure())
-                  ..checkEnvironment()),
+                  ..initialize()),
         BlocProvider(create: (_) => DownloadCubit(DownloadInfrastructure())),
       ],
       child: const App(),

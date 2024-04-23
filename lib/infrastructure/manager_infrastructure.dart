@@ -14,6 +14,8 @@ class ManagerInfrastructure {
   final Commands commands;
   final TerminalEmulator terminalEmulator;
 
+  Future<bool> detectQuickemu() => commands.commandExists('quickemu');
+
   Future<String?> getTerminalEmulator() =>
       terminalEmulator.getTerminalEmulator();
 

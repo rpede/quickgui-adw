@@ -8,17 +8,16 @@ class StopVmDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: Text(context.t('Stop The Virtual Machine?')),
-      content: Text(context
-          .t('You are about to terminate the virtual machine', args: [vmName])),
+      title: Text('Stop The Virtual Machine?'),
+      content: Text('You are about to terminate the virtual machine "$vmName"'),
       actions: <Widget>[
         TextButton(
           onPressed: () => Navigator.pop(context, false),
-          child: Text(context.t('Cancel')),
+          child: Text('Cancel'),
         ),
         TextButton(
           onPressed: () => Navigator.pop(context, true),
-          child: Text(context.t('OK')),
+          child: Text('OK'),
         ),
       ],
     );

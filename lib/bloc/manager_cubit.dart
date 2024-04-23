@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:provider/provider.dart';
 
 import '../infrastructure/manager_infrastructure.dart';
 import '../infrastructure/vm_config_infrastructure.dart';
@@ -10,13 +13,33 @@ class ManagerCubit extends Cubit<ManagerState> {
 
   final ManagerInfrastructure manager;
   final VmConfigInfrastructure config;
+  Timer? _refreshTimer;
 
   get path => null;
 
-  checkEnvironment() {
+  void initialize() {
+    _checkEnvironment();
+    _startPeriodicRefresh();
+  }
+
+  void _checkEnvironment() {
+    manager
+        .detectQuickemu()
+        .then((quickemu) => emit(state.copyWith(quickemu: quickemu)));
     manager.detectSpice().then((spice) => emit(state.copyWith(spice: spice)));
     manager.getTerminalEmulator().then((terminalEmulator) =>
         emit(state.copyWith(terminalEmulator: terminalEmulator)));
+  }
+
+  void _startPeriodicRefresh() {
+    refreshVms();
+    _refreshTimer = Timer.periodic(const Duration(seconds: 5), (Timer t) {
+      refreshVms();
+    }); // R
+  }
+
+  Future<void> close() async {
+    _refreshTimer?.cancel();
   }
 
   refreshVms() async {

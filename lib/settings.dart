@@ -24,6 +24,7 @@ class Settings extends ChangeNotifier {
   String? get workingDirectory => _storage.getString(_kWorkingDirectory);
 
   setWorkingDirectory(String? value) {
+    Directory.current = value;
     _setOrRemoveString(_kWorkingDirectory, value);
     notifyListeners();
   }
