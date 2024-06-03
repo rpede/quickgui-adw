@@ -1,3 +1,4 @@
+import 'package:adwaita_icons/adwaita_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:libadwaita/libadwaita.dart';
@@ -63,8 +64,8 @@ class VmRow extends StatelessWidget {
       AdwButton.flat(
         onPressed:
             spice ? () => _onSpiceConnectPressed(context, vmInfo!) : null,
-        child: Icon(
-          Icons.monitor,
+        child: AdwaitaIcon(
+          AdwaitaIcons.terminal,
           color: spice ? buttonColor : null,
           semanticLabel: 'Connect display with SPICE',
         ),
@@ -84,8 +85,8 @@ class VmRow extends StatelessWidget {
     return [
       AdwButton.flat(
         onPressed: active ? null : () => _onRunPressed(context),
-        child: Icon(
-          active ? Icons.play_arrow : Icons.play_arrow_outlined,
+        child: AdwaitaIcon(
+          AdwaitaIcons.play,
           color: active ? Colors.green : buttonColor,
           semanticLabel: active ? 'Running' : 'Run',
         ),
@@ -93,8 +94,8 @@ class VmRow extends StatelessWidget {
       SizedBox(width: 5),
       AdwButton.flat(
         onPressed: !active ? null : () => _onStopPressed(context),
-        child: Icon(
-          active ? Icons.stop : Icons.stop_outlined,
+        child: AdwaitaIcon(
+          AdwaitaIcons.media_playback_stop,
           color: active ? Colors.red : null,
           semanticLabel: active ? 'Stop' : 'Not running',
         ),
@@ -102,8 +103,8 @@ class VmRow extends StatelessWidget {
       SizedBox(width: 5),
       AdwButton.flat(
         onPressed: active ? null : () => _onDeletePressed(context, name),
-        child: Icon(
-          Icons.delete,
+        child: AdwaitaIcon(
+          AdwaitaIcons.edit_delete,
           color: active ? null : buttonColor,
           semanticLabel: 'Delete',
         ),

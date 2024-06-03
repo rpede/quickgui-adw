@@ -1,4 +1,5 @@
 import 'package:adwaita/adwaita.dart';
+import 'package:adwaita_icons/adwaita_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:libadwaita/libadwaita.dart';
@@ -32,7 +33,10 @@ class App extends StatelessWidget {
       home: AdwScaffold(
         actions: AdwActions().windowManager,
         title: const Text("Quickui Adw"),
-        end: const [GtkPopupMenu(body: SettingsMenu())],
+        end: const [
+          GtkPopupMenu(
+              icon: AdwaitaIcon(AdwaitaIcons.menu), body: SettingsMenu())
+        ],
         body:
             BlocBuilder<ManagerCubit, ManagerState>(builder: (context, state) {
           if (!state.quickemu) return const MissingQuickemu();
