@@ -15,6 +15,7 @@ class VmRow extends StatelessWidget {
 
   bool get spice => vmInfo?.spicePort != null;
   bool get ssh => vmInfo?.sshPort != null;
+
   void _onRunPressed(BuildContext context) async {
     context.read<ManagerCubit>().startVm(name);
   }

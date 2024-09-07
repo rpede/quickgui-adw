@@ -79,8 +79,8 @@ class ManagerCubit extends Cubit<ManagerState> {
     await manager.runVm(name);
     final info = config.parseVmInfo(name);
     emit(state.copyWith(
-      currentVms: [name, ...state.currentVms],
-      activeVms: {name: info}..addAll(state.activeVms),
+      currentVms: [name, ...state.currentVms..remove(name)],
+      activeVms: {name: info, ...state.activeVms..remove(name)},
     ));
   }
 
