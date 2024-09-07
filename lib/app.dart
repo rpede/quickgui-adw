@@ -1,5 +1,6 @@
+import 'package:adw_icons/adw_icon.dart';
+import 'package:adw_icons/adw_icon_data.dart';
 import 'package:adwaita/adwaita.dart';
-import 'package:adwaita_icons/adwaita_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:libadwaita/libadwaita.dart';
@@ -35,7 +36,8 @@ class App extends StatelessWidget {
         title: const Text("Quickui Adw"),
         end: const [
           GtkPopupMenu(
-              icon: AdwaitaIcon(AdwaitaIcons.menu), body: SettingsMenu())
+              icon: AdwIcon(AdwIconData.actionsOpenMenuSymbolic),
+              body: SettingsMenu())
         ],
         body:
             BlocBuilder<ManagerCubit, ManagerState>(builder: (context, state) {

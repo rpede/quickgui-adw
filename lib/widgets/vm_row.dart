@@ -1,6 +1,6 @@
-import 'package:adwaita_icons/adwaita_icons.dart';
+import 'package:adw_icons/adw_icon.dart';
+import 'package:adw_icons/adw_icon_data.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/svg.dart';
 import 'package:libadwaita/libadwaita.dart';
 import 'package:provider/provider.dart';
 
@@ -64,18 +64,19 @@ class VmRow extends StatelessWidget {
       AdwButton.flat(
         onPressed:
             spice ? () => _onSpiceConnectPressed(context, vmInfo!) : null,
-        child: AdwaitaIcon(
-          AdwaitaIcons.terminal,
+        textStyle: TextStyle(
           color: spice ? buttonColor : null,
-          semanticLabel: 'Connect display with SPICE',
         ),
+        child: const Text("🌶️", semanticsLabel: 'Connect display with SPICE'),
       ),
-      SizedBox(width: 5),
+      const SizedBox(width: 5),
       AdwButton.flat(
         onPressed: ssh ? () => _onSshConnectPressed(context, vmInfo!) : null,
-        child: SvgPicture.asset('assets/images/console.svg',
-            semanticsLabel: 'Connect with SSH',
-            color: ssh ? buttonColor : Colors.grey),
+        child: AdwIcon(
+          AdwIconData.legacyUtilitiesTerminalSymbolic,
+          color: spice ? buttonColor : null,
+          semanticLabel: 'Connect with SSH',
+        ),
       ),
     ];
   }
@@ -85,26 +86,26 @@ class VmRow extends StatelessWidget {
     return [
       AdwButton.flat(
         onPressed: active ? null : () => _onRunPressed(context),
-        child: AdwaitaIcon(
-          AdwaitaIcons.play,
+        child: AdwIcon(
+          AdwIconData.actionsMediaPlaybackStartSymbolic,
           color: active ? Colors.green : buttonColor,
           semanticLabel: active ? 'Running' : 'Run',
         ),
       ),
-      SizedBox(width: 5),
+      const SizedBox(width: 5),
       AdwButton.flat(
         onPressed: !active ? null : () => _onStopPressed(context),
-        child: AdwaitaIcon(
-          AdwaitaIcons.media_playback_stop,
+        child: AdwIcon(
+          AdwIconData.actionsMediaPlaybackStopSymbolic,
           color: active ? Colors.red : null,
           semanticLabel: active ? 'Stop' : 'Not running',
         ),
       ),
-      SizedBox(width: 5),
+      const SizedBox(width: 5),
       AdwButton.flat(
         onPressed: active ? null : () => _onDeletePressed(context, name),
-        child: AdwaitaIcon(
-          AdwaitaIcons.edit_delete,
+        child: AdwIcon(
+          AdwIconData.actionsEditDeleteSymbolic,
           color: active ? null : buttonColor,
           semanticLabel: 'Delete',
         ),
