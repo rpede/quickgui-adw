@@ -38,8 +38,10 @@ class ManagerCubit extends Cubit<ManagerState> {
     }); // R
   }
 
+  @override
   Future<void> close() async {
     _refreshTimer?.cancel();
+    super.close();
   }
 
   refreshVms() async {
@@ -85,8 +87,8 @@ class ManagerCubit extends Cubit<ManagerState> {
   }
 
   stopVm(String name) async {
-    final exitCode = await manager.killVm(name);
-    if (exitCode == 0) {
+    final success = await manager.killVm(name);
+    if (success) {
       emit(state.copyWith(
         currentVms: [...state.currentVms]..remove(name),
         activeVms: {...state.activeVms}..remove(name),

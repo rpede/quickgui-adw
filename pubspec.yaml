@@ -33,6 +33,7 @@ dependencies:
     git:
       url: https://github.com/rpede/adw_icons.git
       ref: main
+  path: ^1.9.0
 
 dev_dependencies:
   flutter_test:
